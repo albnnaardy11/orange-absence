@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Filament\Member\Pages;
+
+use Filament\Pages\Page;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
+use Filament\Tables\Columns\TextColumn;
+use App\Models\CashLog;
+use Illuminate\Support\Facades\Auth;
+
+class RiwayatKas extends Page implements HasTable
+{
+    use InteractsWithTable;
+
+    // protected static $navigationIcon = 'heroicon-o-currency-dollar';
+
+    protected string $view = 'filament.member.pages.riwayat-kas';
+
+    public function table(Table $table): Table
+    {
+        return $table
+            ->query(CashLog::query()->where('user_id', Auth::id()))
+            ->columns([
+                TextColumn::make('created_at')->dateTime()->label('Date')->sortable(),
+                TextColumn::make('division.name')->label('Division'),
+                TextColumn::make('amount')->money('IDR'),
+                TextColumn::make('status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'paid' => 'success',
+                        'unpaid' => 'danger',
+                    }),
+            ]);
+    }
+}
