@@ -24,25 +24,40 @@ class VerificationCodeService
             throw new \Exception('Kode verifikasi tidak valid, sudah non-aktif, atau kedaluwarsa.');
         }
 
-        // 2. Determine the current schedule for the division
-        $today = now()->format('l'); // Monday, Tuesday...
-        
-        $schedule = Schedule::where('division_id', $divisionId)
-            ->where('day', $today)
-            ->first();
-
-        // 3. Time Window Check ( +/- 30 Minutes Tolerance)
-        if ($schedule) {
+        // 2. Time Window Check
+        // If code works by schedule, check start_at / expires_at
+        if ($verificationCode->schedule_id && $verificationCode->start_at && $verificationCode->expires_at) {
             $now = now();
-            $startTime = Carbon::parse($schedule->start_time)->subMinutes(30);
-            $endTime = Carbon::parse($schedule->end_time)->addMinutes(30);
+            $startTime = $verificationCode->start_at->copy()->subMinutes(30);
+            $endTime = $verificationCode->expires_at->copy()->addMinutes(30);
 
             if (!$now->between($startTime, $endTime)) {
                 throw new \Exception('Anda hanya bisa absen dalam rentang waktu jadwal (toleransi 30 menit).');
             }
+
+            $schedule = $verificationCode->schedule;
+        } else {
+            // Legacy / Manual code fallback: Find schedule manually
+            // Only check "expires_at" for validity (done in query above), but if we want strict window:
+            
+            $today = now()->format('l'); 
+            $schedule = Schedule::where('division_id', $divisionId)
+                ->where('day', $today)
+                ->first();
+
+            // Perform strict check if schedule exists
+            if ($schedule) {
+                $now = now();
+                $startTime = Carbon::parse($schedule->start_time)->subMinutes(30);
+                $endTime = Carbon::parse($schedule->end_time)->addMinutes(30);
+
+                if (!$now->between($startTime, $endTime)) {
+                    throw new \Exception('Anda hanya bisa absen dalam rentang waktu jadwal (toleransi 30 menit).');
+                }
+            }
         }
 
-        // 4. Duplicate Check
+        // 3. Duplicate Check
         $exists = Attendance::where('user_id', $userId)
             ->where('division_id', $divisionId)
             ->where('verification_code_id', $verificationCode->id)
@@ -54,7 +69,7 @@ class VerificationCodeService
 
         return [
             'verification_code_id' => $verificationCode->id,
-            'schedule_id' => $schedule?->id,
+            'schedule_id' => $schedule?->id ?? $verificationCode->schedule_id,
         ];
     }
 }

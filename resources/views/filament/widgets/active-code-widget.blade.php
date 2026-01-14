@@ -9,7 +9,7 @@
                      <p class="text-4xl font-bold tracking-tight text-primary-600 dark:text-primary-400 mt-1">
                          {{ $code->code }}
                      </p>
-                     <p class="text-sm text-gray-400">Expires: {{ $code->expired_at->format('H:i') }}</p>
+                     <p class="text-sm text-gray-400">Expires: {{ $code->expires_at?->format('H:i') ?? '--:--' }}</p>
                  </div>
                  <x-filament::button
                      icon="heroicon-o-clipboard"

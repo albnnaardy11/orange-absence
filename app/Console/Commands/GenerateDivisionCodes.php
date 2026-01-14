@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use App\Models\Division;
+use App\Models\VerificationCode;
 
 class GenerateDivisionCodes extends Command
 {
@@ -25,26 +27,44 @@ class GenerateDivisionCodes extends Command
      */
     public function handle()
     {
-        $divisions = \App\Models\Division::where('is_auto_generate', true)->get();
+        $today = now()->format('l');
         $date = now()->toDateString();
-        $expiresAt = now()->setTime(17, 0, 0);
+        
+        // Find Schedules for today where the Division has auto-generate enabled
+        $schedules = \App\Models\Schedule::where('day', $today)
+            ->whereHas('division', function ($query) {
+                $query->where('is_auto_generate', true);
+            })
+            ->get();
 
-        foreach ($divisions as $division) {
-            // Deactivate old codes for today
-            \App\Models\VerificationCode::where('division_id', $division->id)
+        foreach ($schedules as $schedule) {
+            // Check if code already exists to avoid duplicates
+            $exists = VerificationCode::where('schedule_id', $schedule->id)
                 ->where('date', $date)
+                ->exists();
+
+            if ($exists) {
+                continue;
+            }
+
+            // Deactivate old/other codes for this division/schedule if any (cleanup)
+            VerificationCode::where('division_id', $schedule->division_id)
+                ->where('date', $date)
+                ->where('schedule_id', $schedule->id)
                 ->update(['is_active' => false]);
 
             // Generate new code
-            \App\Models\VerificationCode::create([
-                'division_id' => $division->id,
+            VerificationCode::create([
+                'division_id' => $schedule->division_id,
+                'schedule_id' => $schedule->id,
                 'code' => sprintf("%06d", mt_rand(1, 999999)),
                 'date' => $date,
-                'expires_at' => $expiresAt,
+                'start_at' => now()->setTimeFromTimeString($schedule->start_time),
+                'expires_at' => now()->setTimeFromTimeString($schedule->end_time),
                 'is_active' => true,
             ]);
         }
 
-        $this->info('Successfully generated vision codes for ' . $divisions->count() . ' divisions.');
+        $this->info('Successfully generated division codes for ' . $schedules->count() . ' schedules.');
     }
 }

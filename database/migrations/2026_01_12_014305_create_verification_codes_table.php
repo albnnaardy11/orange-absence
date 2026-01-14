@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('division_id')->constrained()->cascadeOnDelete();
             $table->string('code')->unique();
-            $table->timestamp('expired_at');
+            $table->date('date');
+            $table->timestamp('expires_at');
             $table->timestamps();
         });
     }

@@ -14,6 +14,7 @@ class UsersTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->with(['roles'])->withCount(['cashLogs as overdue_count' => fn ($q) => $q->overdue()]))
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),
@@ -25,18 +26,15 @@ class UsersTable
                 TextColumn::make('financial_status')
                     ->label('Status Keuangan')
                     ->getStateUsing(function ($record) {
-                        $count = $record->cashLogs()
-                            ->where('status', 'unpaid')
-                            ->get()
-                            ->filter(fn ($log) => $log->is_overdue)
-                            ->count();
-                        
+                        $count = $record->overdue_count;
                         $debt = $count * 5000;
                         
-                        return $debt > 0 ? "Hutang: Rp " . number_format($debt, 0, ',', '.') : 'Lunas';
+                        return $debt > 0 
+                            ? "Nunggak {$count}x (Rp " . number_format($debt, 0, ',', '.') . ")" 
+                            : 'Lunas';
                     })
                     ->badge()
-                    ->color(fn (string $state): string => str_contains($state, 'Hutang') ? 'danger' : 'success'),
+                    ->color(fn (string $state): string => str_contains($state, 'Nunggak') ? 'danger' : 'success'),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

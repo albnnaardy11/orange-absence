@@ -11,12 +11,18 @@ class VerificationCode extends Model
     protected $casts = [
         'date' => 'date',
         'is_active' => 'boolean',
+        'start_at' => 'datetime',
         'expires_at' => 'datetime',
     ];
 
     public function division(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Division::class);
+    }
+
+    public function schedule(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Schedule::class);
     }
 
     public function attendances(): \Illuminate\Database\Eloquent\Relations\HasMany

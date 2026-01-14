@@ -16,7 +16,7 @@ class Absen extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    // protected static $navigationIcon = 'heroicon-o-document-text';
+    protected static bool $shouldRegisterNavigation = false;
 
     protected string $view = 'filament.member.pages.absen';
 

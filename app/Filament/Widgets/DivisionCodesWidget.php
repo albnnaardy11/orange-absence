@@ -30,7 +30,8 @@ class DivisionCodesWidget extends BaseWidget
         return $table
             ->query(
                 VerificationCode::query()
-                    ->where('date', now()->toDateString())
+                    ->whereDate('date', now()->toDateString())
+                    ->whereNotNull('schedule_id')
                     ->when(
                         Auth::check() && !Auth::user()->hasRole('super_admin'),
                         fn ($query) => $query->whereIn('division_id', Auth::user()->divisions->pluck('id'))
@@ -43,31 +44,22 @@ class DivisionCodesWidget extends BaseWidget
                     ->label('Code')
                     ->badge()
                     ->color('info')
-                    ->copyable()
                     ->copyMessage('Code copied to clipboard')
                     ->copyMessageDuration(1500),
+                Tables\Columns\TextColumn::make('start_at')
+                    ->label('Start')
+                    ->time('H:i')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('expires_at')
+                    ->label('End')
+                    ->time('H:i')
+                    ->sortable(),
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean()
                     ->label('Active'),
             ])
             ->headerActions([
-                CreateAction::make()
-                    ->label('Add Code')
-                    ->model(VerificationCode::class)
-                    ->form([
-                        Select::make('division_id')
-                            ->relationship('division', 'name')
-                            ->required(),
-                        TextInput::make('code')
-                            ->default(fn () => sprintf("%06d", mt_rand(1, 999999)))
-                            ->required(),
-                        DateTimePicker::make('expires_at')
-                            ->default(now()->setTime(17, 0, 0))
-                            ->required(),
-                        Hidden::make('date')
-                            ->default(now()->toDateString()),
-                    ])
-                    ->after(fn () => $this->dispatch('refresh-active-codes')),
+                // Manual creation removed as per request (now automated via Schedule)
                 Action::make('automation')
                     ->label('Manage Automation')
                     ->icon('heroicon-o-cpu-chip')
@@ -109,6 +101,7 @@ class DivisionCodesWidget extends BaseWidget
                         
                         VerificationCode::create([
                             'division_id' => $record->division_id,
+                            'schedule_id' => $record->schedule_id,
                             'code' => sprintf("%06d", mt_rand(1, 999999)),
                             'date' => $record->date,
                             'expires_at' => $record->expires_at,

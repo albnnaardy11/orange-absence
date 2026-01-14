@@ -14,9 +14,13 @@ class SchedulesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->with(['division']))
             ->columns([
                 TextColumn::make('division.name')
                     ->sortable()
+                    ->searchable(),
+                TextColumn::make('classroom')
+                    ->label('Ruang Kelas')
                     ->searchable(),
                 TextColumn::make('day'),
                 TextColumn::make('start_time'),

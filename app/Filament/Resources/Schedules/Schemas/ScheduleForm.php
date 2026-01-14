@@ -14,6 +14,9 @@ class ScheduleForm
                 Forms\Components\Select::make('division_id')
                     ->relationship('division', 'name')
                     ->required(),
+                Forms\Components\TextInput::make('classroom')
+                    ->label('Ruang Kelas')
+                    ->maxLength(255),
                 Forms\Components\Select::make('day')
                     ->options([
                         'Monday' => 'Monday',
@@ -28,6 +31,14 @@ class ScheduleForm
                 Forms\Components\TimePicker::make('start_time')
                     ->required(),
                 Forms\Components\TimePicker::make('end_time')
+                    ->required(),
+                Forms\Components\Select::make('status')
+                    ->options([
+                        'active' => 'Active',
+                        'finished' => 'Finished',
+                        'inactive' => 'Inactive',
+                    ])
+                    ->default('active')
                     ->required(),
             ]);
     }

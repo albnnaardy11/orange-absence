@@ -14,7 +14,7 @@ class RiwayatKas extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    // protected static $navigationIcon = 'heroicon-o-currency-dollar';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-currency-dollar';
 
     protected string $view = 'filament.member.pages.riwayat-kas';
 

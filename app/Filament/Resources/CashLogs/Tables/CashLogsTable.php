@@ -11,12 +11,14 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Builder;
 
 class CashLogsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['user', 'division']))
             ->columns([
                 TextColumn::make('user.name')
                     ->sortable()
@@ -47,10 +49,10 @@ class CashLogsTable
                             return $query->where('status', 'unpaid')
                                 ->where(function ($q) {
                                     $q->whereNotNull('date')
-                                        ->whereRaw("date(date, 'weekday 4') < date('now')")
+                                        ->whereRaw("DATE_ADD(date, INTERVAL (3 - WEEKDAY(date)) DAY) < CURDATE()")
                                         ->orWhere(function ($sq) {
-                                            $sq->whereRaw("date(date, 'weekday 4') = date('now')")
-                                                ->whereRaw("time('now') > '17:00:00'");
+                                            $sq->whereRaw("DATE_ADD(date, INTERVAL (3 - WEEKDAY(date)) DAY) = CURDATE()")
+                                                ->whereRaw("CURTIME() > '17:00:00'");
                                         });
                                 });
                         }
@@ -59,10 +61,10 @@ class CashLogsTable
                             return $query->where('status', 'unpaid')
                                 ->where(function ($q) {
                                     $q->whereNotNull('date')
-                                        ->whereRaw("date(date, 'weekday 4') > date('now')")
+                                        ->whereRaw("DATE_ADD(date, INTERVAL (3 - WEEKDAY(date)) DAY) > CURDATE()")
                                         ->orWhere(function ($sq) {
-                                            $sq->whereRaw("date(date, 'weekday 4') = date('now')")
-                                                ->whereRaw("time('now') <= '17:00:00'");
+                                            $sq->whereRaw("DATE_ADD(date, INTERVAL (3 - WEEKDAY(date)) DAY) = CURDATE()")
+                                                ->whereRaw("CURTIME() <= '17:00:00'");
                                         });
                                 });
                         }
