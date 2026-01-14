@@ -19,9 +19,9 @@ class CashLog extends Model
             return false;
         }
 
-        // Deadline is Thursday 17:00 of the same week
+        // Deadline is Friday 17:00 of the same week (Monday + 4 days)
         $date = Carbon::parse($this->date);
-        $deadline = $date->startOfWeek()->addDays(3)->setTime(17, 0, 0);
+        $deadline = $date->startOfWeek()->addDays(4)->setTime(17, 0, 0);
         
         return now()->greaterThan($deadline);
     }
@@ -31,10 +31,14 @@ class CashLog extends Model
         return $query->where('status', 'unpaid')
             ->whereNotNull('date')
             ->where(function ($q) {
-                $q->whereRaw("date(date, 'weekday 4') < date('now')")
+                // Check if current date is past the Friday of the week of 'date'
+                // Weekday index: Mon=0, Tue=1, ... Fri=4
+                // We want: DATE_ADD(date, INTERVAL (4 - WEEKDAY(date)) DAY) < CURDATE()
+                $q->whereRaw("DATE_ADD(date, INTERVAL (4 - WEEKDAY(date)) DAY) < CURDATE()")
                     ->orWhere(function ($sq) {
-                        $sq->whereRaw("date(date, 'weekday 4') = date('now')")
-                            ->whereRaw("time('now', 'localtime') > '17:00:00'");
+                        // Or if it IS Friday (deadline day) and time is past 17:00
+                        $sq->whereRaw("DATE_ADD(date, INTERVAL (4 - WEEKDAY(date)) DAY) = CURDATE()")
+                            ->whereRaw("CURTIME() > '17:00:00'");
                     });
             });
     }

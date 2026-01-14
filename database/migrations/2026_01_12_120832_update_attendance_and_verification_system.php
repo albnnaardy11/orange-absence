@@ -12,9 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('verification_codes', function (Blueprint $table) {
-            $table->date('date')->nullable()->after('code');
-            $table->boolean('is_active')->default(true)->after('date');
-            $table->renameColumn('expired_at', 'expires_at');
+            if (!Schema::hasColumn('verification_codes', 'date')) {
+                $table->date('date')->nullable()->after('code');
+            }
+            if (!Schema::hasColumn('verification_codes', 'is_active')) {
+                $table->boolean('is_active')->default(true)->after('date');
+            }
+            if (Schema::hasColumn('verification_codes', 'expired_at')) {
+                $table->renameColumn('expired_at', 'expires_at');
+            }
         });
 
         Schema::table('attendances', function (Blueprint $table) {

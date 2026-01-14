@@ -32,10 +32,14 @@ class ActiveCodeWidget extends Widget
             return ['codes' => collect()];
         }
         
-        $divisionIds = $user->divisions->pluck('id');
-        
-        $codes = VerificationCode::whereIn('division_id', $divisionIds)
-            ->where('expired_at', '>', now())
+        $query = VerificationCode::query();
+
+        if (!$user->hasRole('super_admin')) {
+            $query->whereIn('division_id', $user->divisions->pluck('id'));
+        }
+
+        $codes = $query->where('expires_at', '>', now())
+            ->whereNotNull('schedule_id')
             ->with('division')
             ->get();
             

@@ -17,6 +17,7 @@ class AttendancesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->with(['user', 'division', 'schedule']))
             ->columns([
                 TextColumn::make('user.name')
                     ->label('Member')
