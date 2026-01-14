@@ -1,62 +1,89 @@
-# 🍊 Orange Absence & Cash System
+# 🍊 ORANGE ABSENCE & CASH SYSTEM
 
-A high-performance, professional management system for attendance and cash logging, built with **Laravel 11**, **Filament V3**, and **Spatie Permissions**. Engineered for scalability and capable of handling **10,000+ concurrent users**.
+<p align="center">
+  <img src="https://img.shields.io/badge/Laravel-11-FF2D20?style=for-the-badge&logo=laravel" alt="Laravel 11">
+  <img src="https://img.shields.io/badge/Filament-V3-D97706?style=for-the-badge&logo=filament" alt="Filament V3">
+  <img src="https://img.shields.io/badge/Concurrency-10k+-065F46?style=for-the-badge" alt="10k Users">
+  <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT License">
+</p>
 
-## 🚀 Key Features
-
-### 📅 Automated Schedule Lifecycle
-- **Dynamic Display**: Members only see active classes scheduled for the current day.
-- **Auto-Expiration**: Classes automatically hide and transition to "Finished" status once past their `end_time`.
-- **Background Cleanup**: An automated worker (`expire:schedules`) runs every minute to clean up verification codes and update statuses.
-
-### 💰 Automated Cash Management
-- **Weekly Generation**: Automated console command generates weekly unpaid cash logs for all members.
-- **Overdue Tracking**: Intelligent logic determines overdue payments based on custom deadlines (Friday 17:00).
-- **Batch Processing**: Optimized database queries for massive record handling.
-
-### 🔐 Multi-Role Architecture
-- **Super Admin**: Full control over divisions, users, and global settings.
-- **Secretary**: Management of cash logs and attendance reports.
-- **Member**: Mobile-optimized panel for attendance verification and personal history.
-
-## ⚡ Performance & Scalability
-
-This project has undergone a comprehensive performance audit to ensure stability under heavy load:
-- **Query Optimization**: Full eager loading (`with`) implemented across all resources to eliminate N+1 issues.
-- **Database Indexing**: Critical columns (`status`, `day`, `date`, `user_id`) are indexed for millisecond response times.
-- **Efficient Aggregations**: Calculated fields like "Financial Status" use `withCount` to minimize memory usage.
-- **Production Ready**: Includes a `deploy.sh` script for automated caching (Config, Route, View, Icon, and Filament components).
-- **Redis Integration**: Optimized for Redis session and cache drivers.
-
-## 🛠 Tech Stack
-- **Framework**: Laravel 11.x
-- **Admin Panel**: Filament V3
-- **Database**: MySQL / MariaDB (Optimized)
-- **Role Management**: Spatie Laravel-Permission
-- **Frontend**: Blade, Tailwind CSS, Heroicons
-
-## 📦 Deployment
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/your-username/orange-absence.git
-   ```
-
-2. **Run the optimized deployment script**:
-   ```bash
-   sh deploy.sh
-   ```
-   *This script handles composer installation, migrations, and warming up all application caches.*
-
-3. **Configure Environment**:
-   - Set `SESSION_DRIVER=redis` and `CACHE_STORE=redis` for maximum concurrency.
-   - Update `APP_DEBUG=false` in production.
-
-##  cron / Task Scheduling
-Ensure the Laravel Scheduler is running on your server:
-```bash
-* * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
-```
+<p align="center">
+  <strong>Empowering Seamless Attendance and Financial Mastery</strong><br>
+  <em>Engineered for massive scalability and real-time operational excellence.</em>
+</p>
 
 ---
-*Developed with focus on performance, aesthetics, and reliability.*
+
+## 📖 Overview
+
+**Orange Absence** adalah platform manajemen berbasis Laravel yang dirancang khusus untuk menangani absensi, penjadwalan, dan pencatatan keuangan dalam organisasi skala besar. Sistem ini menggabungkan otomasi tingkat tinggi, kontrol akses berbasis peran (RBAC), dan manajemen data *real-time* untuk menyederhanakan alur kerja operasional yang kompleks.
+
+### ✨ Mengapa Memilih Orange Absence?
+
+| Fitur Utama | Deskripsi Singkat |
+| :--- | :--- |
+| 🧩 **Key Management** | Generasi kode verifikasi otomatis untuk kontrol akses yang aman. |
+| 🎯 **Multi-Role Dashboard** | Panel khusus untuk Admin, Sekretaris, dan Member dengan pengalaman yang dipersonalisasi. |
+| 💾 **Data Integration** | Pelacakan absensi dan *cash logs* yang mulus dengan model relasional yang kuat. |
+| 🚀 **High Concurrency** | Dioptimalkan untuk menangani **10,000+ pengguna aktif** secara bersamaan. |
+
+---
+
+## 🚀 Fitur Unggulan (Core Logic)
+
+<details>
+<summary><b>📅 Lifecycle Jadwal Otomatis (Klik untuk detail)</b></summary>
+
+- **Dynamic Display**: Member hanya melihat jadwal aktif yang tersedia pada hari berjalan.
+- **Auto-Expiration**: Jadwal otomatis disembunyikan dan berubah status menjadi "Finished" setelah melewati `end_time`.
+- **Background Cleanup**: Worker otomatis (`expire:schedules`) berjalan setiap menit untuk membersihkan kode verifikasi usang.
+</details>
+
+<details>
+<summary><b>💰 Manajemen Kas Cerdas (Klik untuk detail)</b></summary>
+
+- **Weekly Generation**: Command konsol otomatis menghasilkan log kas mingguan untuk seluruh member.
+- **Overdue Tracking**: Logika cerdas untuk mendeteksi keterlambatan pembayaran berdasarkan deadline (Jumat, 17:00).
+- **Batch Processing**: Optimasi query database untuk menangani ribuan catatan keuangan sekaligus.
+</details>
+
+<details>
+<summary><b>🔐 Arsitektur Multi-Role (Klik untuk detail)</b></summary>
+
+- **Super Admin**: Kontrol penuh atas divisi, pengguna, dan pengaturan global.
+- **Secretary**: Fokus pada manajemen log kas dan laporan absensi.
+- **Member**: Panel responsif (mobile-ready) untuk verifikasi kehadiran dan riwayat pribadi.
+</details>
+
+---
+
+## ⚡ Performa & Skalabilitas
+
+Kami melakukan audit performa komprehensif untuk menjamin stabilitas di bawah beban berat:
+* **Query Optimization**: Implementasi *Full Eager Loading* (`with`) untuk mengeliminasi isu N+1.
+* **Database Indexing**: Kolom kritis (`status`, `day`, `date`, `user_id`) telah diindeks untuk respon milidetik.
+* **Efficient Aggregations**: Field kalkulasi menggunakan `withCount` untuk meminimalkan penggunaan memori.
+* **Redis Integration**: Dioptimalkan untuk driver cache dan session menggunakan Redis.
+
+---
+
+## 🛠 Tech Stack
+
+- **Backend**: Laravel 11.x
+- **Admin Panel**: Filament V3
+- **Database**: MySQL / MariaDB (Optimized Indexing)
+- **Permissions**: Spatie Laravel-Permission
+- **Frontend**: Blade, Tailwind CSS, Vite, Axios
+
+---
+
+## 📦 Jalankan Project
+
+### Prerequisites
+Pastikan lingkungan Anda memiliki: **PHP >= 8.2**, **Composer**, **Node.js & NPM**.
+
+### Langkah Instalasi
+1. **Clone & Masuk ke Direktori**:
+   ```bash
+   git clone [https://github.com/albnnaardy11/orange-absence.git](https://github.com/albnnaardy11/orange-absence.git)
+   cd orange-absence
