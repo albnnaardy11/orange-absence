@@ -32,33 +32,33 @@
                                 <span class="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
                             </div>
                             <x-filament::badge color="primary" size="sm" class="font-bold">
-                                SEKARANG
+                                NOW
                             </x-filament::badge>
                         </div>
                     @endif
                 </x-slot>
 
                 <div class="space-y-8 pt-6 pb-4">
-                    {{-- Row: Ruangan --}}
+                    {{-- Row: Room --}}
                     <div class="flex items-center gap-x-5">
                         <div class="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 ring-1 ring-primary-500/20">
                             <x-heroicon-s-map-pin class="h-6 w-6 text-primary-600 dark:text-primary-400" />
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-sm font-bold text-gray-500 dark:text-gray-400 tracking-tight leading-none mb-1.5">Ruangan</span>
+                            <span class="text-sm font-bold text-gray-500 dark:text-gray-400 tracking-tight leading-none mb-1.5">Room</span>
                             <span class="text-xl font-black text-gray-950 dark:text-white leading-tight">
                                 {{ $schedule->classroom ?? 'Lab PPLG' }}
                             </span>
                         </div>
                     </div>
 
-                    {{-- Row: Waktu --}}
+                    {{-- Row: Time --}}
                     <div class="flex items-center gap-x-5">
                         <div class="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 ring-1 ring-primary-500/20">
                             <x-heroicon-s-clock class="h-6 w-6 text-primary-600 dark:text-primary-400" />
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-sm font-bold text-gray-500 dark:text-gray-400 tracking-tight leading-none mb-1.5">Waktu</span>
+                            <span class="text-sm font-bold text-gray-500 dark:text-gray-400 tracking-tight leading-none mb-1.5">Time</span>
                             <span class="text-xl font-black text-gray-950 dark:text-white leading-tight">
                                 {{ $startTime->format('H:i') }} - {{ $endTime->format('H:i') }}
                             </span>
@@ -83,8 +83,8 @@
                     class="h-8 w-8 text-gray-300 dark:text-gray-600"
                 />
             </div>
-            <h3 class="text-xl font-black text-gray-950 dark:text-white tracking-tight">Belum Ada Jadwal</h3>
-            <p class="mt-1 text-sm text-gray-500 max-w-xs mx-auto font-medium">Anda belum terdaftar di jadwal divisi manapun hari ini.</p>
+            <h3 class="text-xl font-black text-gray-950 dark:text-white tracking-tight">No Schedules</h3>
+            <p class="mt-1 text-sm text-gray-500 max-w-xs mx-auto font-medium">You are not registered in any division schedule today.</p>
         </x-filament::section>
     @endif
 </x-filament-panels::page>

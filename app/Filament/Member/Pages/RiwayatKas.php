@@ -18,6 +18,8 @@ class RiwayatKas extends Page implements HasTable
 
     protected string $view = 'filament.member.pages.riwayat-kas';
 
+    protected static ?string $title = 'Cash History';
+
     public function table(Table $table): Table
     {
         return $table
@@ -28,6 +30,11 @@ class RiwayatKas extends Page implements HasTable
                 TextColumn::make('amount')->money('IDR'),
                 TextColumn::make('status')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'paid' => 'Paid',
+                        'unpaid' => 'Unpaid',
+                        default => ucfirst($state),
+                    })
                     ->color(fn (string $state): string => match ($state) {
                         'paid' => 'success',
                         'unpaid' => 'danger',
