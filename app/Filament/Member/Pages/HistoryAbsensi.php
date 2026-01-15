@@ -18,7 +18,7 @@ class HistoryAbsensi extends Page implements HasTable
 
     protected string $view = 'filament.member.pages.history-absensi';
 
-    protected static ?string $title = 'Riwayat Kehadiran';
+    protected static ?string $title = 'Attendance History';
 
     public function table(Table $table): Table
     {
@@ -26,16 +26,22 @@ class HistoryAbsensi extends Page implements HasTable
             ->query(Attendance::query()->where('user_id', Auth::id()))
             ->columns([
                 TextColumn::make('created_at')
-                    ->label('Tanggal')
+                    ->label('Date')
                     ->dateTime()
                     ->sortable(),
                 TextColumn::make('division.name')
-                    ->label('Divisi'),
+                    ->label('Division'),
                 TextColumn::make('schedule.classroom')
-                    ->label('Ruang Kelas')
+                    ->label('Classroom')
                     ->default('-'),
                 TextColumn::make('status')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'hadir' => 'Present',
+                        'ijin' => 'Permit',
+                        'alpha' => 'Absent',
+                        default => ucfirst($state),
+                    })
                     ->color(fn (string $state): string => match ($state) {
                         'hadir' => 'success',
                         'ijin' => 'warning',
@@ -44,5 +50,43 @@ class HistoryAbsensi extends Page implements HasTable
                     }),
             ])
             ->defaultSort('created_at', 'desc');
+    }
+
+    public function getViewData(): array
+    {
+        $user = Auth::user();
+        
+        $allDivisionIds = \Illuminate\Support\Facades\DB::table('division_user')
+            ->where('user_id', $user->id)
+            ->pluck('division_id')
+            ->toArray();
+            
+        $attendedDivisionIds = \App\Models\Attendance::where('user_id', $user->id)
+            ->pluck('division_id')
+            ->unique()
+            ->toArray();
+            
+        $allDivisionIds = array_unique(array_merge($allDivisionIds, $attendedDivisionIds));
+
+        $schedules = \App\Models\Schedule::query()
+            ->with(['division.users' => function($query) {
+                // Try to find users with secretary role in this division
+                // Note: role is global in Spatie, so we just get users who 'have' the role
+            }])
+            ->whereIn('division_id', $allDivisionIds)
+            ->where('status', 'active')
+            ->get();
+
+        return [
+            'schedules' => $schedules,
+        ];
+    }
+
+    public function getSecretary( \App\Models\Division $division)
+    {
+        // Find a user in this division who has the 'secretary' role
+        return $division->users()
+            ->role('secretary')
+            ->first()?->name ?? 'Lecturer';
     }
 }

@@ -18,7 +18,7 @@ class JadwalKelas extends Page
 
     protected string $view = 'filament.member.pages.jadwal-kelas';
 
-    protected static ?string $title = 'Jadwal Kelas';
+    protected static ?string $title = 'Class Schedule';
 
     public function getSchedules()
     {
@@ -38,7 +38,7 @@ class JadwalKelas extends Page
     public function absenAction(): Action
     {
         return Action::make('absen')
-            ->label('Masuk Kelas')
+            ->label('Check-in Now')
             ->color('primary')
             ->button()
             ->extraAttributes([
@@ -46,7 +46,7 @@ class JadwalKelas extends Page
             ])
             ->form([
                 TextInput::make('code')
-                    ->label('Kode Absensi')
+                    ->label('Attendance Code')
                     ->required(),
             ])
             ->action(function (array $data, array $arguments, VerificationCodeService $service) {
@@ -54,7 +54,7 @@ class JadwalKelas extends Page
                 $schedule = Schedule::find($scheduleId);
 
                 if (!$schedule) {
-                    Notification::make()->title('Jadwal tidak ditemukan')->danger()->send();
+                    Notification::make()->title('Schedule not found')->danger()->send();
                     return;
                 }
 
@@ -79,7 +79,7 @@ class JadwalKelas extends Page
                         $cashLog->update(['attendance_id' => $attendance->id]);
                     }
 
-                    Notification::make()->title('Absensi berhasil!')->success()->send();
+                    Notification::make()->title('Attendance successful!')->success()->send();
 
                 } catch (\Exception $e) {
                     Notification::make()->title($e->getMessage())->danger()->send();
