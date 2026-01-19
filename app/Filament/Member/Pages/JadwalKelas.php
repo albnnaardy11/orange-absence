@@ -32,11 +32,37 @@ class JadwalKelas extends Page
 
         $divisionIds = $user->divisions()->pluck('divisions.id');
 
+        $now = now()->format('H:i:s');
+        $today = now()->format('l');
+        $yesterday = now()->subDay()->format('l');
+
         return Schedule::whereIn('division_id', $divisionIds)
             ->where('status', 'active')
-            ->where('day', now()->format('l'))
-            ->where('end_time', '>', now()->format('H:i:s'))
+            ->where(function ($query) use ($today, $yesterday, $now) {
+                // 1. Scheduled for Today
+                $query->where(function ($q) use ($today, $now) {
+                    $q->where('day', $today)
+                      ->where(function ($timeQ) use ($now) {
+                          // Normal schedule: must generally end after now to be relevant
+                          $timeQ->where(function ($normal) use ($now) {
+                              $normal->whereColumn('start_time', '<=', 'end_time')
+                                     ->where('end_time', '>', $now);
+                          })
+                          // Overnight schedule (starts today, ends tomorrow): always relevant today
+                          ->orWhere(function ($overnight) {
+                              $overnight->whereColumn('start_time', '>', 'end_time');
+                          });
+                      });
+                })
+                // 2. Scheduled for Yesterday (but overnight ending today)
+                ->orWhere(function ($q) use ($yesterday, $now) {
+                    $q->where('day', $yesterday)
+                      ->whereColumn('start_time', '>', 'end_time') // Overnight
+                      ->where('end_time', '>', $now); // Still active today
+                });
+            })
             ->with('division')
+            ->orderBy('start_time')
             ->get();
     }
 

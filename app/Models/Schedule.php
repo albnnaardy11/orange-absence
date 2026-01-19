@@ -64,14 +64,27 @@ class Schedule extends Model
 
     protected static function createVerificationCode(Schedule $schedule): void
     {
+        $start = now()->setTimeFromTimeString($schedule->start_time);
+        $end = now()->setTimeFromTimeString($schedule->end_time);
+
+        if ($end->lessThan($start)) {
+            $end->addDay();
+        }
+
         \Illuminate\Support\Facades\Log::info("Attempting to create code for Schedule: " . $schedule->id);
         // Check if exists
         $exists = VerificationCode::where('schedule_id', $schedule->id)
             ->where('date', now()->toDateString())
             ->exists();
-        
+
         if ($exists) {
-            static::updateVerificationCode($schedule);
+             VerificationCode::where('schedule_id', $schedule->id)
+                ->where('date', now()->toDateString())
+                ->update([
+                    'division_id' => $schedule->division_id,
+                    'start_at' => $start,
+                    'expires_at' => $end,
+                ]);
             return;
         }
 
@@ -90,8 +103,8 @@ class Schedule extends Model
                 'schedule_id' => $schedule->id,
                 'code' => sprintf("%06d", mt_rand(1, 999999)),
                 'date' => now()->toDateString(),
-                'start_at' => now()->setTimeFromTimeString($schedule->start_time),
-                'expires_at' => now()->setTimeFromTimeString($schedule->end_time),
+                'start_at' => $start,
+                'expires_at' => $end,
                 'is_active' => true,
             ]);
         } else {
@@ -101,12 +114,21 @@ class Schedule extends Model
 
     protected static function updateVerificationCode(Schedule $schedule): void
     {
+        // This method is now redundant as createVerificationCode handles update too
+        // But for compatibility if called elsewhere:
+        $start = now()->setTimeFromTimeString($schedule->start_time);
+        $end = now()->setTimeFromTimeString($schedule->end_time);
+
+        if ($end->lessThan($start)) {
+            $end->addDay();
+        }
+
         VerificationCode::where('schedule_id', $schedule->id)
             ->where('date', now()->toDateString())
             ->update([
                 'division_id' => $schedule->division_id, // in case division changed
-                'start_at' => now()->setTimeFromTimeString($schedule->start_time),
-                'expires_at' => now()->setTimeFromTimeString($schedule->end_time),
+                'start_at' => $start,
+                'expires_at' => $end,
             ]);
     }
 }

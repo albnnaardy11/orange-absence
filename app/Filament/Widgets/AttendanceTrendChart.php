@@ -19,7 +19,7 @@ class AttendanceTrendChart extends ChartWidget
         $data = Attendance::select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
             ->where('created_at', '>=', now()->subDays(7))
             ->where('status', 'hadir')
-            ->groupBy('date')
+            ->groupBy(DB::raw('DATE(created_at)'))
             ->orderBy('date')
             ->get();
 
