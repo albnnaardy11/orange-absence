@@ -16,6 +16,10 @@ class RiwayatKas extends Page implements HasTable
 
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-currency-dollar';
 
+    protected static string | \UnitEnum | null $navigationGroup = 'Keuangan';
+
+    protected static ?int $navigationSort = 1;
+
     protected string $view = 'filament.member.pages.riwayat-kas';
 
     protected static ?string $title = 'Cash History';

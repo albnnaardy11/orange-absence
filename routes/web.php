@@ -9,7 +9,7 @@ Route::get('/', function () {
         }
         return redirect()->to('/member');
     }
-    return view('welcome');
+    return redirect()->to('/member/login');
 });
 
 Route::get('/login', function () {

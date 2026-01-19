@@ -17,6 +17,10 @@ class PengajuanIzin extends Page implements HasForms
 
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-document-plus';
 
+    protected static string | \UnitEnum | null $navigationGroup = 'Absensi';
+
+    protected static ?int $navigationSort = 2;
+
     protected string $view = 'filament.member.pages.pengajuan-izin';
 
     protected static ?string $navigationLabel = 'Pengajuan Izin/Sakit';
@@ -76,7 +80,7 @@ class PengajuanIzin extends Page implements HasForms
             'status' => $data['status'],
             'description' => $data['description'],
             'proof_image' => $data['proof_image'],
-            'is_approved' => false, // Needs admin approval
+            'is_approved' => false,
         ]);
 
         Notification::make()

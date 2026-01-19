@@ -16,6 +16,10 @@ class HistoryAbsensi extends Page implements HasTable
 
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-clock';
 
+    protected static string | \UnitEnum | null $navigationGroup = 'Absensi';
+
+    protected static ?int $navigationSort = 1;
+
     protected string $view = 'filament.member.pages.history-absensi';
 
     protected static ?string $title = 'Attendance History';

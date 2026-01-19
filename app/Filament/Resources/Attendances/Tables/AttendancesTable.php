@@ -44,7 +44,9 @@ class AttendancesTable
                 ImageColumn::make('proof_image')
                     ->label('Bukti')
                     ->disk('public')
-                    ->visibility('public'),
+                    ->size(40)
+                    ->circular()
+                    ->openUrlInNewTab(),
                 IconColumn::make('is_approved')
                     ->label('Approved')
                     ->boolean()

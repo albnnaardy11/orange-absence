@@ -18,6 +18,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Navigation\NavigationGroup;
 
 class MemberPanelProvider extends PanelProvider
 {
@@ -27,8 +28,19 @@ class MemberPanelProvider extends PanelProvider
             ->id('member')
             ->path('member')
             ->login()
-            ->profile()
+            ->profile(\App\Filament\Member\Pages\Auth\EditProfile::class)
             ->brandName('ABSEN ORANGE')
+            ->navigationGroups([
+                NavigationGroup::make()
+                     ->label('Absensi')
+                     ->collapsible(),
+                NavigationGroup::make()
+                    ->label('Kegiatan')
+                    ->collapsible(),
+                NavigationGroup::make()
+                    ->label('Keuangan')
+                    ->collapsible(),
+            ])
             ->colors([
                 'primary' => Color::Amber,
             ])

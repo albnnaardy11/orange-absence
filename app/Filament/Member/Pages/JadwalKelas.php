@@ -17,6 +17,10 @@ class JadwalKelas extends Page
 {
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-calendar';
 
+    protected static string | \UnitEnum | null $navigationGroup = 'Kegiatan';
+
+    protected static ?int $navigationSort = 1;
+
     protected string $view = 'filament.member.pages.jadwal-kelas';
 
     protected static ?string $title = 'Class Schedule';
