@@ -11,6 +11,7 @@ use App\Models\Attendance;
 use App\Models\CashLog;
 use App\Services\VerificationCodeService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 
 class JadwalKelas extends Page
 {
@@ -50,6 +51,20 @@ class JadwalKelas extends Page
                     ->required(),
             ])
             ->action(function (array $data, array $arguments, VerificationCodeService $service) {
+                $throttleKey = 'absen-submit:' . Auth::id();
+                
+                if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+                    $seconds = RateLimiter::availableIn($throttleKey);
+                    Notification::make()
+                        ->title('Too many attempts')
+                        ->body("Please wait {$seconds} seconds.")
+                        ->danger()
+                        ->send();
+                    return;
+                }
+
+                RateLimiter::hit($throttleKey, 60);
+
                 $scheduleId = $arguments['schedule_id'];
                 $schedule = Schedule::find($scheduleId);
 

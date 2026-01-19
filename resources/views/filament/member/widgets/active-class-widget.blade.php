@@ -1,3 +1,4 @@
+<div>
 @php
     $activeSchedule = $this->getActiveSchedule();
 @endphp
@@ -48,3 +49,5 @@
     </x-filament::section>
 </x-filament-widgets::widget>
 @endif
+</div>
+

@@ -1,0 +1,38 @@
+
+   Symfony\Component\ErrorHandler\Error\FatalError 
+
+  Type of App\Filament\Member\Pages\PengajuanIzin::$navigationIcon must be BackedEnum|string|null (as in class Filament\Pages\Page)
+
+  at app\Filament\Member\Pages\PengajuanIzin.php:14
+     10▕ use Filament\Notifications\Notification;
+     11▕ use Filament\Pages\Page;
+     12▕ use Illuminate\Support\Facades\Auth;
+     13▕ 
+  ➜  14▕ class PengajuanIzin extends Page implements HasForms
+     15▕ {
+     16▕     use InteractsWithForms;
+     17▕ 
+     18▕     protected static ?string $navigationIcon = 'heroicon-o-document-plus';
+
+
+   Whoops\Exception\ErrorException 
+
+  Type of App\Filament\Member\Pages\PengajuanIzin::$navigationIcon must be BackedEnum|string|null (as in class Filament\Pages\Page)
+
+  at app\Filament\Member\Pages\PengajuanIzin.php:14
+     10▕ use Filament\Notifications\Notification;
+     11▕ use Filament\Pages\Page;
+     12▕ use Illuminate\Support\Facades\Auth;
+     13▕ 
+  ➜  14▕ class PengajuanIzin extends Page implements HasForms
+     15▕ {
+     16▕     use InteractsWithForms;
+     17▕ 
+     18▕     protected static ?string $navigationIcon = 'heroicon-o-document-plus';
+
+  1   vendor\filp\whoops\src\Whoops\Run.php:520
+      Whoops\Run::handleError("Type of App\Filament\Member\Pages\PengajuanIzin::$navigationIcon must be BackedEnum|string|null (as in class Filament\Pages\Page)", "C:\laragon\www\orange-absence\app\Filament\Member\Pages\PengajuanIzin.php")
+
+  2   [internal]:0
+      Whoops\Run::handleShutdown()
+

@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call(RoleSeeder::class);
+        // $this->call(RoleSeeder::class);
 
         // Super Admin
         $admin = User::firstOrCreate([
@@ -40,11 +40,21 @@ class DatabaseSeeder extends Seeder
         }
 
         // Divisions
-        $divNames = ['Game', 'Web', 'Network'];
+        $divisions = [
+            1 => 'Game',
+            2 => 'Web',
+            3 => 'Esport FF',
+            4 => 'Esport ML',
+            5 => 'Cyber',
+        ];
+        
         $createdDivisions = [];
-        foreach ($divNames as $name) {
-            $div = Division::firstOrCreate(['name' => $name], ['description' => "$name Division"]);
-            $createdDivisions[] = $div;
+        foreach ($divisions as $id => $name) {
+            $div = Division::updateOrCreate(['id' => $id], [
+                'name' => $name,
+                'description' => "$name Division"
+            ]);
+            $createdDivisions[$id] = $div;
             
             // Assign Secretary to all for demo
             $secretary->divisions()->syncWithoutDetaching([$div->id]);
@@ -60,18 +70,6 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // Member
-        $member = User::firstOrCreate([
-            'email' => 'member@orange.com',
-        ], [
-            'name' => 'Member User',
-            'password' => Hash::make('password'),
-            'email_verified_at' => now(),
-        ]);
-        if (!$member->hasRole('member')) {
-            $member->assignRole('member');
-        }
-        // Assign to Violin
-        $member->divisions()->sync([$createdDivisions[0]->id]);
+        $this->call(MemberSeeder::class);
     }
 }

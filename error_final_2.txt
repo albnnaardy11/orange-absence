@@ -1,0 +1,50 @@
+
+  Environment ..........  
+  Application Name  Laravel  
+  Laravel Version  11.47.0  
+  PHP Version .... 8.3.4  
+  Composer Version  2.7.2  
+  Environment .... local  
+  Debug Mode ... ENABLED  
+  URL ........ localhost  
+  Maintenance Mode . OFF  
+  Timezone  Asia/Jakarta  
+  Locale ............ en  
+
+  Cache ................  
+  Config .... NOT CACHED  
+  Events .... NOT CACHED  
+  Routes .... NOT CACHED  
+  Views ......... CACHED  
+
+  Drivers ..............  
+  Broadcasting ..... log  
+  Cache ....... database  
+  Database ....... mysql  
+  Logs .. stack / single  
+  Mail ............. log  
+  Queue ....... database  
+  Session ..... database  
+
+  Shield ...............  
+  Auth Provider  App\Models\User|CONFIGURED  
+  Tenancy ..... DISABLED  
+  Tenant Model .........  
+  Translations  NOT PUBLISHED  
+  Version ........ 4.0.4  
+  Views .. NOT PUBLISHED  
+
+  Filament .............  
+  Blade Icons  NOT CACHED  
+  Packages  filament, forms, notifications, support, tables, actions, infolists, schemas, widgets  
+  Panel Components  NOT CACHED  
+  Version ....... v4.0.0  
+  Views .. NOT PUBLISHED  
+
+  Livewire .............  
+  Livewire ...... v3.7.3  
+
+  Spatie Permissions ...  
+  Features Enabled  Default  
+  Version ....... 6.24.0  
+

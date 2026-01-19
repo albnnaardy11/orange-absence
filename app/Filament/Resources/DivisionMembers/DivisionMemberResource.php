@@ -21,6 +21,8 @@ class DivisionMemberResource extends Resource
 
     protected static ?string $navigationLabel = 'Division Members';
 
+    protected static string | \UnitEnum | null $navigationGroup = 'User Management';
+
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
@@ -67,7 +69,11 @@ class DivisionMemberResource extends Resource
                     ->wrap(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('divisions')
+                    ->relationship('divisions', 'name')
+                    ->multiple()
+                    ->preload()
+                    ->label('Filter per Divisi'),
             ])
             ->actions([
                 \Filament\Actions\EditAction::make(),

@@ -11,12 +11,15 @@ use App\Models\User;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use App\Filament\Resources\Users\RelationManagers;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-users';
+
+    protected static string | \UnitEnum | null $navigationGroup = 'User Management';
 
     public static function form(Schema $schema): Schema
     {
@@ -31,7 +34,7 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\CashLogsRelationManager::class,
         ];
     }
 

@@ -18,6 +18,8 @@ class AttendanceResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-check';
 
+    protected static string | \UnitEnum | null $navigationGroup = 'Absence Management';
+
     public static function form(Schema $schema): Schema
     {
         return AttendanceForm::configure($schema);

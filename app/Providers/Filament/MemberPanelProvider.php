@@ -27,6 +27,8 @@ class MemberPanelProvider extends PanelProvider
             ->id('member')
             ->path('member')
             ->login()
+            ->profile()
+            ->brandName('ABSEN ORANGE')
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -39,6 +41,7 @@ class MemberPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Member/Widgets'), for: 'App\Filament\Member\Widgets')
             ->widgets([
                 \App\Filament\Member\Widgets\MemberStatsWidget::class,
+                \App\Filament\Member\Widgets\MemberAttendanceChart::class,
                 \App\Filament\Member\Widgets\ActiveClassWidget::class,
             ])
             ->middleware([

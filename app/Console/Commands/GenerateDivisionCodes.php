@@ -30,6 +30,12 @@ class GenerateDivisionCodes extends Command
         $today = now()->format('l');
         $date = now()->toDateString();
         
+        // Skip if holiday
+        if (\App\Models\Holiday::where('date', $date)->exists()) {
+            $this->warn('Today is a holiday. Skipping code generation.');
+            return;
+        }
+        
         // Find Schedules for today where the Division has auto-generate enabled
         $schedules = \App\Models\Schedule::where('day', $today)
             ->whereHas('division', function ($query) {

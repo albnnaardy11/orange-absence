@@ -28,6 +28,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->brandName('ABSEN ORANGE')
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -39,6 +40,9 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
+                \App\Filament\Widgets\AttendanceOverview::class,
+                \App\Filament\Widgets\AttendanceTrendChart::class,
+                \App\Filament\Widgets\DivisionDistributionChart::class,
                 \App\Filament\Widgets\ArrearsOverview::class,
                 \App\Filament\Widgets\DebtorsTableWidget::class,
                 \App\Filament\Widgets\DivisionCodesWidget::class,

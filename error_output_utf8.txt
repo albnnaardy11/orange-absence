@@ -1,0 +1,38 @@
+
+   Symfony\Component\ErrorHandler\Error\FatalError 
+
+  Cannot redeclare static Filament\Widgets\TableWidget::$heading as non static App\Filament\Widgets\DivisionLeaderboardWidget::$heading
+
+  at app\Filament\Widgets\DivisionLeaderboardWidget.php:11
+      7▕ use Filament\Tables;
+      8▕ use Filament\Tables\Table;
+      9▕ use Filament\Widgets\TableWidget as BaseWidget;
+     10▕ 
+  ➜  11▕ class DivisionLeaderboardWidget extends BaseWidget
+     12▕ {
+     13▕     protected static ?int $sort = 5;
+     14▕ 
+     15▕     protected ?string $heading = 'Leaderboard Divisi Teraktif';
+
+
+   Whoops\Exception\ErrorException 
+
+  Cannot redeclare static Filament\Widgets\TableWidget::$heading as non static App\Filament\Widgets\DivisionLeaderboardWidget::$heading
+
+  at app\Filament\Widgets\DivisionLeaderboardWidget.php:11
+      7▕ use Filament\Tables;
+      8▕ use Filament\Tables\Table;
+      9▕ use Filament\Widgets\TableWidget as BaseWidget;
+     10▕ 
+  ➜  11▕ class DivisionLeaderboardWidget extends BaseWidget
+     12▕ {
+     13▕     protected static ?int $sort = 5;
+     14▕ 
+     15▕     protected ?string $heading = 'Leaderboard Divisi Teraktif';
+
+  1   vendor\filp\whoops\src\Whoops\Run.php:520
+      Whoops\Run::handleError("Cannot redeclare static Filament\Widgets\TableWidget::$heading as non static App\Filament\Widgets\DivisionLeaderboardWidget::$heading", "C:\laragon\www\orange-absence\app\Filament\Widgets\DivisionLeaderboardWidget.php")
+
+  2   [internal]:0
+      Whoops\Run::handleShutdown()
+

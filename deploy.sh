@@ -1,30 +1,45 @@
 #!/bin/bash
 
-# Exit on error
-set -e
+# 🍊 Orange Absence Deployment Script (Enterprise Standard)
 
-echo "🚀 Starting High-Concurrency Deployment..."
+echo "Starting deployment process..."
 
-# Install dependencies based on lock file
+# 1. Maintenance Mode
+echo "Entering maintenance mode..."
+php artisan down || true
+
+# 2. Update Code
+# echo "Pulling latest changes from git..."
+# git pull origin main
+
+# 3. Security Check & Dependencies
+echo "Installing dependencies..."
 composer install --no-dev --optimize-autoloader
-
-# Run database migrations
-php artisan migrate --force
-
-# Warm up caches for performance
-echo "🔥 Warming up caches..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan filament:cache-components
-php artisan icons:cache
-
-# Clear optimized loader for fresh build
-php artisan optimize
-
-# Build frontend assets
-echo "📦 Building assets..."
 npm install
 npm run build
 
-echo "✅ Deployment Successful! System is optimized for 10,000+ concurrent users."
+# 4. Database Migrations
+echo "Running database migrations..."
+php artisan migrate --force
+
+# 5. Production Optimization
+echo "Optimizing application for performance..."
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan event:cache
+php artisan filament:cache-components || true
+
+# 6. Cache Clearing
+echo "Clearing general cache..."
+php artisan cache:clear
+
+# 7. Background Processing Monitoring
+# echo "Restarting Laravel Horizon..."
+# php artisan horizon:terminate || true
+
+# 8. Exit Maintenance Mode
+echo "Application back online!"
+php artisan up
+
+echo "Deployment finished successfully! 🚀"

@@ -2,9 +2,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Laravel-11-FF2D20?style=for-the-badge&logo=laravel" alt="Laravel 11">
-  <img src="https://img.shields.io/badge/Filament-V3-D97706?style=for-the-badge&logo=filament" alt="Filament V3">
+  <img src="https://img.shields.io/badge/Filament-V4-D97706?style=for-the-badge&logo=filament" alt="Filament V4">
   <img src="https://img.shields.io/badge/Concurrency-10k+-065F46?style=for-the-badge" alt="10k Users">
-  <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT License">
+  <img src="https://img.shields.io/badge/Standard-Unicorp_Enterprise-blueviolet?style=for-the-badge" alt="Enterprise Standard">
 </p>
 
 <p align="center">
@@ -16,74 +16,87 @@
 
 ## 📖 Overview
 
-**Orange Absence** adalah platform manajemen berbasis Laravel yang dirancang khusus untuk menangani absensi, penjadwalan, dan pencatatan keuangan dalam organisasi skala besar. Sistem ini menggabungkan otomasi tingkat tinggi, kontrol akses berbasis peran (RBAC), dan manajemen data *real-time* untuk menyederhanakan alur kerja operasional yang kompleks.
+**Orange Absence** adalah platform manajemen kehadiran dan finansial berbasis Laravel yang dirancang untuk skala enterprise. Sistem ini menggabungkan otomasi tingkat tinggi, kontrol akses berbasis peran (RBAC), dan arsitektur data yang dioptimalkan untuk menangani beban kerja masif secara real-time.
 
-### ✨ Mengapa Memilih Orange Absence?
+### ✨ Enterprise Core Features
 
-| Fitur Utama | Deskripsi Singkat |
+| Fitur Utama | Deskripsi Standar Unicorp |
 | :--- | :--- |
-| 🧩 **Key Management** | Generasi kode verifikasi otomatis untuk kontrol akses yang aman. |
-| 🎯 **Multi-Role Dashboard** | Panel khusus untuk Admin, Sekretaris, dan Member dengan pengalaman yang dipersonalisasi. |
-| 💾 **Data Integration** | Pelacakan absensi dan *cash logs* yang mulus dengan model relasional yang kuat. |
-| 🚀 **High Concurrency** | Dioptimalkan untuk menangani **10,000+ pengguna aktif** secara bersamaan. |
+| 🛡️ **Advanced RBAC** | Permission management yang dioptimalkan dengan caching layer untuk performa tinggi. |
+| 📊 **Financial Analytics** | Laporan kas otomatis dengan sistem deteksi keterlambatan (Late) yang presisi. |
+| 🧩 **Stateless Design** | Arsitektur yang mendukung skalabilitas horizontal melalui integrasi Redis & S3. |
+| 🚀 **High Concurrency** | Teruji untuk menangani **10,000+ pengguna aktif** secara simultan. |
 
 ---
 
-## 🚀 Fitur Unggulan (Core Logic)
+## 🚀 Logika Bisnis & Fitur Unggulan
 
 <details>
-<summary><b>📅 Lifecycle Jadwal Otomatis (Klik untuk detail)</b></summary>
+<summary><b>📅 Lifecycle Jadwal Otomatis</b></summary>
 
-- **Dynamic Display**: Member hanya melihat jadwal aktif yang tersedia pada hari berjalan.
-- **Auto-Expiration**: Jadwal otomatis disembunyikan dan berubah status menjadi "Finished" setelah melewati `end_time`.
-- **Background Cleanup**: Worker otomatis (`expire:schedules`) berjalan setiap menit untuk membersihkan kode verifikasi usang.
+- **Dynamic Availability**: Member hanya melihat jadwal aktif pada hari berjalan (Context-Aware UI).
+- **Auto-Expiration**: Sistem otomatis menutup jadwal dan membatalkan kode verifikasi setelah melewati `end_time`.
+- **Background Cleanup**: Job terjadwal `expire:schedules` menjaga integritas data tanpa mengganggu performa dashboard.
 </details>
 
 <details>
-<summary><b>💰 Manajemen Kas Cerdas (Klik untuk detail)</b></summary>
+<summary><b>💰 Intelligent Cash Management</b></summary>
 
-- **Weekly Generation**: Command konsol otomatis menghasilkan log kas mingguan untuk seluruh member.
-- **Overdue Tracking**: Logika cerdas untuk mendeteksi keterlambatan pembayaran berdasarkan deadline (Jumat, 17:00).
-- **Batch Processing**: Optimasi query database untuk menangani ribuan catatan keuangan sekaligus.
+- **Automated Billing**: Generasi log kas mingguan masif menggunakan Laravel Queue untuk efisiensi memori.
+- **Deadline Enforcement**: Audit otomatis status pembayaran berdasarkan deadline ketat (Jumat, 17:00).
+- **Audit Trails**: Setiap transaksi finansial tercatat secara permanen untuk kebutuhan audit (via Spatie Activity Log).
 </details>
 
 <details>
-<summary><b>🔐 Arsitektur Multi-Role (Klik untuk detail)</b></summary>
+<summary><b>🔐 Multi-Tier Architecture</b></summary>
 
-- **Super Admin**: Kontrol penuh atas divisi, pengguna, dan pengaturan global.
-- **Secretary**: Fokus pada manajemen log kas dan laporan absensi.
-- **Member**: Panel responsif (mobile-ready) untuk verifikasi kehadiran dan riwayat pribadi.
+- **Super Admin**: Kontrol infrastruktur, manajemen divisi, dan pemantauan sistem global.
+- **Secretary**: Fokus pada operasional harian, validasi kehadiran, dan manajemen keuangan.
+- **Member**: Antarmuka responsif untuk klaim kehadiran via kode unik dan riwayat kontribusi.
 </details>
 
 ---
 
 ## ⚡ Performa & Skalabilitas
 
-Kami melakukan audit performa komprehensif untuk menjamin stabilitas di bawah beban berat:
-* **Query Optimization**: Implementasi *Full Eager Loading* (`with`) untuk mengeliminasi isu N+1.
-* **Database Indexing**: Kolom kritis (`status`, `day`, `date`, `user_id`) telah diindeks untuk respon milidetik.
-* **Efficient Aggregations**: Field kalkulasi menggunakan `withCount` untuk meminimalkan penggunaan memori.
-* **Redis Integration**: Dioptimalkan untuk driver cache dan session menggunakan Redis.
+* **Query Efficiency**: Implementasi Eager Loading menyeluruh pada Filament Resources untuk eliminasi isu N+1.
+* **Database Indexing**: Strategi indexing pada kolom kritis (Composite Indexes) untuk kecepatan akses data milidetik.
+* **Redis Integration**: Direkomendasikan sebagai backbone untuk session, cache, dan manajemen queue.
+* **Enterprise Standards**: Implementasi Strict Typing (PHP 8.2+) dan Audit Trails untuk integritas data.
 
 ---
 
 ## 🛠 Tech Stack
 
-- **Backend**: Laravel 11.x
-- **Admin Panel**: Filament V3
-- **Database**: MySQL / MariaDB (Optimized Indexing)
-- **Permissions**: Spatie Laravel-Permission
-- **Frontend**: Blade, Tailwind CSS, Vite, Axios
+- **Backend**: Laravel 11.x (PHP 8.2+)
+- **Admin Panel**: Filament V4 (TALL Stack)
+- **Database**: MySQL/MariaDB (Advanced Composite Indexing)
+- **Infrastructure**: Redis, S3 Compatible Storage, Laravel Horizon (Recommended)
+- **Security**: Spatie Permission (Cached), Rate Limiting, Audit Log
 
 ---
 
-## 📦 Jalankan Project
+## 📦 Langkah Instalasi
 
-### Prerequisites
-Pastikan lingkungan Anda memiliki: **PHP >= 8.2**, **Composer**, **Node.js & NPM**.
-
-### Langkah Instalasi
-1. **Clone & Masuk ke Direktori**:
+1. **Clone & Setup**:
    ```bash
-   git clone [https://github.com/albnnaardy11/orange-absence.git](https://github.com/albnnaardy11/orange-absence.git)
+   git clone https://github.com/albnnaardy11/orange-absence.git
    cd orange-absence
+   cp .env.example .env
+   composer install
+   ```
+
+2. **Optimization & Database**:
+   ```bash
+   php artisan key:generate
+   php artisan migrate --seed
+   npm install && npm run build
+   ```
+
+3. **Run Production**:
+   ```bash
+   chmod +x deploy.sh
+   ./deploy.sh
+   ```
+
+<p align="center">Built for Excellence & Scalability</p>

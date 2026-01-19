@@ -12,6 +12,8 @@ use App\Services\VerificationCodeService;
 use App\Models\Attendance;
 use Illuminate\Support\Facades\Auth;
 
+use Illuminate\Support\Facades\RateLimiter;
+
 class Absen extends Page implements HasForms
 {
     use InteractsWithForms;
@@ -44,6 +46,20 @@ class Absen extends Page implements HasForms
 
     public function submit(VerificationCodeService $service): void
     {
+        $throttleKey = 'absen-submit:' . Auth::id();
+        
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            Notification::make()
+                ->title('Too many attempts')
+                ->body("Please wait {$seconds} seconds before trying again.")
+                ->danger()
+                ->send();
+            return;
+        }
+
+        RateLimiter::hit($throttleKey, 60);
+
         $data = $this->form->getState();
 
         try {

@@ -12,6 +12,11 @@ class VerificationCodeService
 {
     public function validate(string $code, int $divisionId, int $userId)
     {
+        // 0. Holiday Check
+        if (\App\Models\Holiday::where('date', now()->toDateString())->exists()) {
+            throw new \Exception('Hari ini adalah hari libur, sistem absensi dinonaktifkan.');
+        }
+
         // 1. Check if code exists and belongs to division
         $verificationCode = VerificationCode::where('code', $code)
             ->where('division_id', $divisionId)

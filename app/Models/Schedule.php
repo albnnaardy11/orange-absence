@@ -1,11 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Schedule extends Model
 {
+    use LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['day', 'start_time', 'end_time', 'status'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
+
     protected $guarded = [];
 
     public function division(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -58,6 +72,13 @@ class Schedule extends Model
         
         if ($exists) {
             static::updateVerificationCode($schedule);
+            return;
+        }
+
+        // Skip if today is a holiday
+        $isHoliday = Holiday::where('date', now()->toDateString())->exists();
+        if ($isHoliday) {
+            \Illuminate\Support\Facades\Log::info("Today is a holiday. Skipping code generation.");
             return;
         }
 

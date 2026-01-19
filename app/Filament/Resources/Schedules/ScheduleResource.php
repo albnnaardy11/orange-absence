@@ -18,6 +18,8 @@ class ScheduleResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
 
+    protected static string | \UnitEnum | null $navigationGroup = 'Master Data';
+
     public static function form(Schema $schema): Schema
     {
         return ScheduleForm::configure($schema);
