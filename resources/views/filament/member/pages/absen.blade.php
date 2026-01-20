@@ -1,5 +1,5 @@
 <x-filament-panels::page>
-    <div class="max-w-xl mx-auto">
+    <div class="max-w-full">
         <x-filament::section>
             <x-slot name="heading">
                 Input Attendance Code

@@ -56,6 +56,10 @@ class PengajuanIzin extends Page implements HasForms
                 Forms\Components\FileUpload::make('proof_image')
                     ->label('Bukti (Foto Surat/Chat)')
                     ->image()
+                    ->maxSize(512) // Limit to 512KB
+                    ->validationMessages([
+                        'max' => 'Ukuran foto terlalu besar! Maksimal 500kb agar database tidak bengkak.',
+                    ])
                     ->disk('public')
                     ->directory('attendance-proofs')
                     ->required(),
