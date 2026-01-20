@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\UsersImport;
-use App\Imports\DivisionMembersImport; // Added
+use Spatie\Permission\Models\Role;
 
 // Force load new class if autoloader is stuck
 require_once __DIR__ . '/../../app/Imports/UsersImport.php';
@@ -19,6 +19,9 @@ class MemberSeeder extends Seeder
      */
     public function run(): void
     {
+        // Ensure member role exists
+        Role::firstOrCreate(['name' => 'member', 'guard_name' => 'web']);
+
         // Members import from Excel
         $excelFile = base_path('EMAIL ANAK ORENS.xlsx');
         if (file_exists($excelFile)) {

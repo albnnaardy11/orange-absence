@@ -9,11 +9,16 @@ use App\Models\Schedule;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
+use Spatie\Permission\Models\Role;
+
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // $this->call(RoleSeeder::class);
+        // Ensure roles exist
+        Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'secretary', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'member', 'guard_name' => 'web']);
 
         // Super Admin
         $admin = User::firstOrCreate([
