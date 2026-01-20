@@ -57,8 +57,12 @@ class DatabaseSeeder extends Seeder
         foreach ($divisions as $id => $name) {
             $div = Division::updateOrCreate(['id' => $id], [
                 'name' => $name,
-                'description' => "$name Division"
+                'description' => "$name Division",
+                'latitude' => -6.333093,
+                'longitude' => 106.897862,
+                'radius' => 100,
             ]);
+
             $createdDivisions[$id] = $div;
             
             // Assign Secretary to all for demo

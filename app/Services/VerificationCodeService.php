@@ -27,9 +27,10 @@ class VerificationCodeService
             $distance = $this->calculateDistance($userLat, $userLong, $division->latitude, $division->longitude);
             
             if ($distance > ($division->radius + 10)) { // Beri toleransi extra 10 meter
-                $distanceFormatted = number_format($distance, 0);
-                throw new \Exception("Anda terlalu jauh dari titik pusat ({$distanceFormatted}m). Maksimal radius adalah {$division->radius}m. Pastikan Anda berada di area SMK.");
+                throw new \Exception("Anda terlalu jauh dari lokasi eskul. jangan bolos yaaaa!");
             }
+
+
         }
         // 0. Holiday Check
         if (\App\Models\Holiday::where('date', now()->toDateString())->exists()) {

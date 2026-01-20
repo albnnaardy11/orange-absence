@@ -2,16 +2,15 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    if (auth()->check()) {
-        if (auth()->user()->hasAnyRole(['super_admin', 'secretary'])) {
-            return redirect()->to('/admin');
-        }
-        return redirect()->to('/member');
-    }
-    return redirect()->to('/member/login');
-});
+use App\Http\Controllers\QuickLoginController;
+
+Route::get('/', [QuickLoginController::class, 'index'])->name('portal');
+Route::get('/secretary', function () {
+    return redirect()->to('/admin/login');
+})->name('secretary.login');
 
 Route::get('/login', function () {
-    return redirect()->to('/member/login');
+    return redirect()->to('/admin/login');
 })->name('login');
+
+

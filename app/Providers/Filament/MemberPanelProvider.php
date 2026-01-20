@@ -29,6 +29,7 @@ class MemberPanelProvider extends PanelProvider
             ->path('member')
             ->login()
             ->profile(\App\Filament\Member\Pages\Auth\EditProfile::class)
+
             ->brandName('ABSEN ORANGE')
             ->navigationGroups([
                 NavigationGroup::make()
