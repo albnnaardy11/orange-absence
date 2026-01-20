@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
             guests: '/member/login',
             users: '/member',
         );
+        $middleware->encryptCookies(except: [
+            'user_lat',
+            'user_long',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

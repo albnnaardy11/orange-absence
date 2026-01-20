@@ -10,8 +10,27 @@ use Illuminate\Support\Facades\DB;
 
 class VerificationCodeService
 {
-    public function validate(string $code, int $divisionId, int $userId)
+    public function validate(string $code, int $divisionId, int $userId, $userLat = null, $userLong = null)
     {
+        // Fallback multi-level: Form Arguments -> Laravel Cookie -> Raw PHP Cookie
+        $userLat = $userLat ?: request()->cookie('user_lat') ?: ($_COOKIE['user_lat'] ?? null);
+        $userLong = $userLong ?: request()->cookie('user_long') ?: ($_COOKIE['user_long'] ?? null);
+
+        $division = \App\Models\Division::find($divisionId);
+        
+        // 0a. Geofencing Check
+        if ($division && $division->latitude && $division->longitude) {
+            if (!$userLat || !$userLong) {
+                throw new \Exception('Lokasi GPS tidak terdeteksi. Silakan aktifkan GPS dan izinkan akses lokasi.');
+            }
+
+            $distance = $this->calculateDistance($userLat, $userLong, $division->latitude, $division->longitude);
+            
+            if ($distance > ($division->radius + 10)) { // Beri toleransi extra 10 meter
+                $distanceFormatted = number_format($distance, 0);
+                throw new \Exception("Anda terlalu jauh dari titik pusat ({$distanceFormatted}m). Maksimal radius adalah {$division->radius}m. Pastikan Anda berada di area SMK.");
+            }
+        }
         // 0. Holiday Check
         if (\App\Models\Holiday::where('date', now()->toDateString())->exists()) {
             throw new \Exception('Hari ini adalah hari libur, sistem absensi dinonaktifkan.');
@@ -76,5 +95,21 @@ class VerificationCodeService
             'verification_code_id' => $verificationCode->id,
             'schedule_id' => $schedule?->id ?? $verificationCode->schedule_id,
         ];
+    }
+
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371000; // in meters
+
+        $latDelta = deg2rad($lat2 - $lat1);
+        $lonDelta = deg2rad($lon2 - $lon1);
+
+        $a = sin($latDelta / 2) * sin($latDelta / 2) +
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($lonDelta / 2) * sin($lonDelta / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 }

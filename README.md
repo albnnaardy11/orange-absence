@@ -23,8 +23,11 @@
 | Fitur Utama | Deskripsi Standar Unicorp |
 | :--- | :--- |
 | 🛡️ **Advanced RBAC** | Permission management yang dioptimalkan dengan caching layer untuk performa tinggi. |
-| 📊 **Financial Analytics** | Laporan kas otomatis dengan sistem deteksi keterlambatan (Late) yang presisi. |
-| 🧩 **Stateless Design** | Arsitektur yang mendukung skalabilitas horizontal melalui integrasi Redis & S3. |
+| 📍 **GPS Cookie Sync** | Sinkronisasi GPS berlapis (Form + Cookies) untuk menjamin akurasi data check-in di berbagai browser. |
+| 🌍 **Jakarta Orientation** | Teroptimasi untuk penggunaan di wilayah Jakarta (WIB) dengan koordinat default Jakarta Timur. |
+| 🔔 **Debt Reminder** | Notifikasi push otomatis untuk penunggak kas (Smart Alert System). |
+| 📟 **Activity Audit** | Tracking setiap mutasi data, IP Address, dan perangkat pengguna yang digunakan. |
+| 📊 **Smart Reporting** | Export laporan bulanan otomatis dalam format profesional Excel & PDF. |
 | 🚀 **High Concurrency** | Teruji untuk menangani **10,000+ pengguna aktif** secara simultan. |
 
 ---
@@ -32,27 +35,35 @@
 ## 🚀 Logika Bisnis & Fitur Unggulan
 
 <details>
+<summary><b>📍 Geofencing & GPS Sync (Bulletproof)</b></summary>
+
+- **Multi-Channel Sync**: Menggunakan jalur `Hidden Input` dan `Browser Cookies` (unencrypted channel) untuk memastikan kordinat GPS sampai ke server meskipun sesi browser tidak stabil.
+- **Smart Validation**: Script otomatis mendeteksi status GPS (Locked/Error) dengan indikator visual real-time di UI.
+- **Radius Tolerance**: Memberikan toleransi extra 10 meter untuk akurasi GPS perangkat mobile yang bervariasi.
+</details>
+
+<details>
 <summary><b>📅 Lifecycle Jadwal Otomatis</b></summary>
 
 - **Dynamic Availability**: Member hanya melihat jadwal aktif pada hari berjalan (Context-Aware UI).
-- **Auto-Expiration**: Sistem otomatis menutup jadwal dan membatalkan kode verifikasi setelah melewati `end_time`.
-- **Background Cleanup**: Job terjadwal `expire:schedules` menjaga integritas data tanpa mengganggu performa dashboard.
+- **Auto-Code Generation**: Kode verifikasi unik digenerate otomatis setiap kali jadwal dimulai (jika fitur Auto-Generate aktif).
+- **Overnight Support**: Sistem mendukung jadwal lintas hari (Shift Malam) dengan deteksi cerdas.
 </details>
 
 <details>
 <summary><b>💰 Intelligent Cash Management</b></summary>
 
-- **Automated Billing**: Generasi log kas mingguan masif menggunakan Laravel Queue untuk efisiensi memori.
+- **Automated Weekly Billing**: Generasi tagihan kas otomatis setiap minggu (Selasa, 05:00) untuk seluruh member.
 - **Deadline Enforcement**: Audit otomatis status pembayaran berdasarkan deadline ketat (Jumat, 17:00).
-- **Audit Trails**: Setiap transaksi finansial tercatat secara permanen untuk kebutuhan audit (via Spatie Activity Log).
+- **Attendance Linkage**: Sistem otomatis menghubungkan pembayaran kas dengan kehadiran member yang sah.
 </details>
 
 <details>
-<summary><b>🔐 Multi-Tier Architecture</b></summary>
+<summary><b>🛠️ Audit & Security Layers</b></summary>
 
-- **Super Admin**: Kontrol infrastruktur, manajemen divisi, dan pemantauan sistem global.
-- **Secretary**: Fokus pada operasional harian, validasi kehadiran, dan manajemen keuangan.
-- **Member**: Antarmuka responsif untuk klaim kehadiran via kode unik dan riwayat kontribusi.
+- **Login Tracker**: Mencatat waktu login terakhir, IP Address, dan Device Info langsung ke tabel user.
+- **Spatie Activity Log**: Setiap perubahan data kritis (Lunas/Hadir/Admin Action) tercatat lengkap dengan metadata jaringan.
+- **Debt Notification**: Pemicu notifikasi otomatis (Database Notification) kepada member dengan tunggakan >= 3 kali.
 </details>
 
 ---
@@ -61,8 +72,8 @@
 
 * **Query Efficiency**: Implementasi Eager Loading menyeluruh pada Filament Resources untuk eliminasi isu N+1.
 * **Database Indexing**: Strategi indexing pada kolom kritis (Composite Indexes) untuk kecepatan akses data milidetik.
-* **Redis Integration**: Direkomendasikan sebagai backbone untuk session, cache, dan manajemen queue.
-* **Enterprise Standards**: Implementasi Strict Typing (PHP 8.2+) dan Audit Trails untuk integritas data.
+* **Production Ready**: Konfigurasi `encryptCookies` dikecualikan untuk jalur GPS guna menjamin interoperabilitas JS-PHP.
+* **Strict Typing**: Implementasi Strict Typing (PHP 8.2+) dan PHP 8.3 Ready.
 
 ---
 
@@ -71,32 +82,31 @@
 - **Backend**: Laravel 11.x (PHP 8.2+)
 - **Admin Panel**: Filament V4 (TALL Stack)
 - **Database**: MySQL/MariaDB (Advanced Composite Indexing)
-- **Infrastructure**: Redis, S3 Compatible Storage, Laravel Horizon (Recommended)
-- **Security**: Spatie Permission (Cached), Rate Limiting, Audit Log
+- **Reporting**: Barryvdh DomPDF & Maatwebsite Excel
+- **Security**: Spatie Permission (Cached) & Spatie Activity Log
 
 ---
 
-## 📦 Langkah Instalasi
+## 📦 Langkah Instalasi & Host (cPanel)
 
-1. **Clone & Setup**:
+1. **Setup Awal**:
    ```bash
-   git clone https://github.com/albnnaardy11/orange-absence.git
-   cd orange-absence
+   composer install && npm install
    cp .env.example .env
-   composer install
-   ```
-
-2. **Optimization & Database**:
-   ```bash
    php artisan key:generate
    php artisan migrate --seed
-   npm install && npm run build
+   npm run build
    ```
 
-3. **Run Production**:
+2. **Produksi (Cron Job)**:
+   Tambahkan baris berikut di Cron Job cPanel Anda (Setiap Menit):
    ```bash
-   chmod +x deploy.sh
-   ./deploy.sh
+   * * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+   ```
+
+3. **Storage Link**:
+   ```bash
+   php artisan storage:link
    ```
 
 <p align="center">Built for Excellence & Scalability</p>

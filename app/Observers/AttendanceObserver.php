@@ -7,6 +7,12 @@ use App\Models\CashLog;
 
 class AttendanceObserver
 {
+    public function creating(Attendance $attendance): void
+    {
+        $attendance->ip_address = request()->ip();
+        $attendance->user_agent = request()->userAgent();
+    }
+
     /**
      * Handle the Attendance "saved" event.
      * This covers both created and updated events.

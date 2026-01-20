@@ -4,6 +4,10 @@ namespace App\Filament\Resources\Divisions\Schemas;
 
 use Filament\Schemas\Schema;
 use Filament\Forms;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
 
 class DivisionForm
 {
@@ -11,11 +15,31 @@ class DivisionForm
     {
         return $schema
             ->components([
-                Forms\Components\TextInput::make('name')
+                TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Textarea::make('description')
+                Textarea::make('description')
                     ->maxLength(65535),
+                Section::make('Geofencing (Validasi Lokasi)')
+                    ->description('Setel lokasi pusat kegiatan agar member hanya bisa absen di radius tertentu.')
+                    ->schema([
+                        Grid::make(3)
+                            ->schema([
+                                TextInput::make('latitude')
+                                    ->numeric()
+                                    ->placeholder('-6.xxxxxx')
+                                    ->helperText('Contoh: -6.200000'),
+                                TextInput::make('longitude')
+                                    ->numeric()
+                                    ->placeholder('106.xxxxxx')
+                                    ->helperText('Contoh: 106.816666'),
+                                TextInput::make('radius')
+                                    ->numeric()
+                                    ->default(50)
+                                    ->suffix('Meter')
+                                    ->helperText('Jarak maksimal member dari titik pusat.'),
+                            ]),
+                    ]),
             ]);
     }
 }

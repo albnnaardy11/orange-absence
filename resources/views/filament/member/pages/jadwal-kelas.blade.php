@@ -87,4 +87,96 @@
             <p class="mt-1 text-sm text-gray-500 max-w-xs mx-auto font-medium">You are not registered in any division schedule today.</p>
         </x-filament::section>
     @endif
+
+    {{-- GPS Status Indicator --}}
+    <div id="gps-status" class="fixed top-18 right-4 z-50 flex items-center gap-x-2 px-3 py-1.5 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-500 opacity-0 translate-y-[-20px]">
+        <div class="h-2 w-2 rounded-full bg-red-500 animate-pulse" id="gps-dot"></div>
+        <span class="text-xs font-bold text-gray-600 dark:text-gray-300" id="gps-text">Mencari GPS...</span>
+    </div>
+
+    <script>
+        window.userLat = null;
+        window.userLong = null;
+
+        function setCookie(name, value) {
+            document.cookie = name + "=" + value + "; path=/; max-age=3600; SameSite=Lax";
+        }
+
+        function updateGPSUI(status) {
+            const el = document.getElementById('gps-status');
+            const dot = document.getElementById('gps-dot');
+            const text = document.getElementById('gps-text');
+            
+            if (!el) return;
+            el.classList.remove('opacity-0', 'translate-y-[-20px]');
+            el.classList.add('opacity-100', 'translate-y-0');
+
+            if (status === 'locked') {
+                dot.classList.remove('bg-red-500');
+                dot.classList.add('bg-green-500');
+                dot.classList.remove('animate-pulse');
+                text.innerText = 'GPS: OK';
+            } else if (status === 'error') {
+                dot.classList.add('bg-red-500');
+                text.innerText = 'GPS: Error';
+            }
+        }
+
+        // Monitoring
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(
+                function(position) {
+                    window.userLat = position.coords.latitude;
+                    window.userLong = position.coords.longitude;
+                    
+                    // Bulletproof: Save to Cookies
+                    setCookie('user_lat', window.userLat);
+                    setCookie('user_long', window.userLong);
+
+                    updateGPSUI('locked');
+                    injectCoords();
+                },
+                function(error) {
+                    console.error('GPS Error:', error.message);
+                    updateGPSUI('error');
+                },
+                { enableHighAccuracy: true, maximumAge: 0 }
+            );
+        }
+
+        function injectCoords() {
+            if (!window.userLat || !window.userLong) return;
+            
+            window.dispatchEvent(new CustomEvent('gps-updated', { 
+                detail: { lat: window.userLat, long: window.userLong } 
+            }));
+
+            document.querySelectorAll('input').forEach(input => {
+                const name = input.getAttribute('name') || '';
+                const id = input.id || '';
+                if (name.includes('user_lat') || id === 'user_lat') {
+                    input.value = window.userLat;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                if (name.includes('user_long') || id === 'user_long') {
+                    input.value = window.userLong;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+        }
+
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.addedNodes.length) injectCoords();
+            });
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        document.addEventListener('mousedown', function(e) {
+            if (e.target.innerText && e.target.innerText.includes('Check-in')) {
+                injectCoords();
+            }
+        });
+    </script>
 </x-filament-panels::page>

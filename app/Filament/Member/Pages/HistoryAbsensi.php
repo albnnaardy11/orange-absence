@@ -41,15 +41,17 @@ class HistoryAbsensi extends Page implements HasTable
                 TextColumn::make('status')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'hadir' => 'Present',
-                        'ijin' => 'Permit',
-                        'alpha' => 'Absent',
+                        'hadir' => 'Hadir',
+                        'izin' => 'Izin',
+                        'sakit' => 'Sakit',
+                        'alfa' => 'Alfa',
                         default => ucfirst($state),
                     })
                     ->color(fn (string $state): string => match ($state) {
                         'hadir' => 'success',
-                        'ijin' => 'warning',
-                        'alpha' => 'danger',
+                        'izin' => 'warning',
+                        'sakit' => 'info',
+                        'alfa' => 'danger',
                         default => 'gray',
                     }),
             ])

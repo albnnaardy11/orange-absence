@@ -10,6 +10,8 @@ use App\Models\Schedule;
 use App\Models\Attendance;
 use App\Models\CashLog;
 use App\Services\VerificationCodeService;
+use Filament\Forms;
+use App\Models\Division;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 
@@ -79,6 +81,18 @@ class JadwalKelas extends Page
                 TextInput::make('code')
                     ->label('Attendance Code')
                     ->required(),
+                Forms\Components\Hidden::make('user_lat')
+                    ->extraAttributes([
+                        'id' => 'user_lat',
+                        'x-init' => '$el.value = window.userLat; $el.dispatchEvent(new Event("input"))',
+                        'x-on:gps-updated.window' => '$el.value = $event.detail.lat; $el.dispatchEvent(new Event("input"))'
+                    ]),
+                Forms\Components\Hidden::make('user_long')
+                    ->extraAttributes([
+                        'id' => 'user_long',
+                        'x-init' => '$el.value = window.userLong; $el.dispatchEvent(new Event("input"))',
+                        'x-on:gps-updated.window' => '$el.value = $event.detail.long; $el.dispatchEvent(new Event("input"))'
+                    ]),
             ])
             ->action(function (array $data, array $arguments, VerificationCodeService $service) {
                 $throttleKey = 'absen-submit:' . Auth::id();
@@ -104,7 +118,13 @@ class JadwalKelas extends Page
                 }
 
                 try {
-                    $result = $service->validate($data['code'], $schedule->division_id, Auth::id());
+                    $result = $service->validate(
+                        $data['code'], 
+                        $schedule->division_id, 
+                        Auth::id(),
+                        $data['user_lat'] ?? null,
+                        $data['user_long'] ?? null
+                    );
 
                     $attendance = Attendance::create([
                         'user_id' => Auth::id(),
@@ -112,6 +132,8 @@ class JadwalKelas extends Page
                         'verification_code_id' => $result['verification_code_id'],
                         'schedule_id' => $schedule->id,
                         'status' => 'hadir',
+                        'latitude' => $data['user_lat'] ?? null,
+                        'longitude' => $data['user_long'] ?? null,
                     ]);
 
                     // Link to unpaid cash log

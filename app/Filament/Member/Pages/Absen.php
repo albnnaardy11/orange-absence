@@ -40,6 +40,18 @@ class Absen extends Page implements HasForms
                 Forms\Components\TextInput::make('code')
                     ->label('Verification Code')
                     ->required(),
+                Forms\Components\Hidden::make('user_lat')
+                    ->extraAttributes([
+                        'id' => 'user_lat',
+                        'x-init' => '$el.value = window.userLat; $el.dispatchEvent(new Event("input"))',
+                        'x-on:gps-updated.window' => '$el.value = $event.detail.lat; $el.dispatchEvent(new Event("input"))'
+                    ]),
+                Forms\Components\Hidden::make('user_long')
+                    ->extraAttributes([
+                        'id' => 'user_long',
+                        'x-init' => '$el.value = window.userLong; $el.dispatchEvent(new Event("input"))',
+                        'x-on:gps-updated.window' => '$el.value = $event.detail.long; $el.dispatchEvent(new Event("input"))'
+                    ]),
             ])
             ->statePath('data');
     }
@@ -63,7 +75,13 @@ class Absen extends Page implements HasForms
         $data = $this->form->getState();
 
         try {
-            $result = $service->validate($data['code'], $data['division_id'], Auth::id());
+            $result = $service->validate(
+                $data['code'], 
+                $data['division_id'], 
+                Auth::id(),
+                $data['user_lat'] ?? null,
+                $data['user_long'] ?? null
+            );
 
             $attendance = Attendance::create([
                 'user_id' => Auth::id(),
@@ -71,6 +89,8 @@ class Absen extends Page implements HasForms
                 'verification_code_id' => $result['verification_code_id'],
                 'schedule_id' => $result['schedule_id'] ?? null,
                 'status' => 'hadir',
+                'latitude' => $data['user_lat'] ?? null,
+                'longitude' => $data['user_long'] ?? null,
             ]);
 
             // Automatically link to the latest unpaid cash log if exists

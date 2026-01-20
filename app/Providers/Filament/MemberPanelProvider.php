@@ -44,6 +44,7 @@ class MemberPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
+            ->databaseNotifications()
             ->viteTheme('resources/css/app.css')
             ->discoverResources(in: app_path('Filament/Member/Resources'), for: 'App\Filament\Member\Resources')
             ->discoverPages(in: app_path('Filament/Member/Pages'), for: 'App\Filament\Member\Pages')

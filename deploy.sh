@@ -22,7 +22,11 @@ npm run build
 echo "Running database migrations..."
 php artisan migrate --force
 
-# 5. Production Optimization
+# 5. Asset & Filesystem Setup
+echo "Creating storage links..."
+php artisan storage:link --force || true
+
+# 6. Production Optimization
 echo "Optimizing application for performance..."
 php artisan config:cache
 php artisan route:cache
