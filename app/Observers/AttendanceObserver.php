@@ -11,6 +11,22 @@ class AttendanceObserver
     {
         $attendance->ip_address = request()->ip();
         $attendance->user_agent = request()->userAgent();
+        
+        // Auto-approve untuk status hadir
+        if ($attendance->status === 'hadir') {
+            $attendance->is_approved = true;
+        }
+    }
+
+    /**
+     * Handle the Attendance "updating" event.
+     */
+    public function updating(Attendance $attendance): void
+    {
+        // Auto-approve jika status diubah menjadi hadir
+        if ($attendance->isDirty('status') && $attendance->status === 'hadir') {
+            $attendance->is_approved = true;
+        }
     }
 
     /**

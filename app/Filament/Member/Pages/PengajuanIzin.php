@@ -3,6 +3,7 @@
 namespace App\Filament\Member\Pages;
 
 use App\Models\Attendance;
+use App\Notifications\LeaveRequestNotification;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Schemas\Schema;
@@ -77,7 +78,7 @@ class PengajuanIzin extends Page implements HasForms
             ->where('day', $today)
             ->first();
 
-        Attendance::create([
+        $attendance = Attendance::create([
             'user_id' => Auth::id(),
             'division_id' => $data['division_id'],
             'schedule_id' => $schedule?->id,
@@ -87,11 +88,27 @@ class PengajuanIzin extends Page implements HasForms
             'is_approved' => false,
         ]);
 
+        // Kirim notifikasi ke member (toast)
         Notification::make()
             ->title('Pengajuan Terkirim')
             ->body('Permohonan izin/sakit Anda telah terkirim dan menunggu persetujuan Admin/Sekretaris.')
             ->success()
             ->send();
+
+        // Kirim notifikasi database ke admin dan sekretaris di divisi yang sama
+        $recipients = \App\Models\User::query()
+            ->where(function ($query) use ($data) {
+                $query->whereHas('roles', fn ($q) => $q->where('name', 'super_admin'))
+                    ->orWhere(function ($q) use ($data) {
+                        $q->whereHas('roles', fn ($r) => $r->where('name', 'panel_user'))
+                          ->whereHas('divisions', fn ($d) => $d->where('divisions.id', $data['division_id']));
+                    });
+            })
+            ->get();
+
+        foreach ($recipients as $recipient) {
+            $recipient->notify(new LeaveRequestNotification($attendance));
+        }
 
         $this->form->fill();
     }

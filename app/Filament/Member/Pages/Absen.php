@@ -89,6 +89,7 @@ class Absen extends Page implements HasForms
                 'verification_code_id' => $result['verification_code_id'],
                 'schedule_id' => $result['schedule_id'] ?? null,
                 'status' => 'hadir',
+                'is_approved' => true, // Auto-approve untuk status hadir
                 'latitude' => $data['user_lat'] ?? null,
                 'longitude' => $data['user_long'] ?? null,
             ]);

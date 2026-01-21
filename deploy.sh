@@ -1,49 +1,186 @@
 #!/bin/bash
 
-# 🍊 Orange Absence Deployment Script (Enterprise Standard)
+# 🍊 Orange Absence - cPanel Deployment Script
+# Compatible with shared hosting environments
+# Version: 2.0 (cPanel Optimized)
 
-echo "Starting deployment process..."
+set -e  # Exit on error
 
-# 1. Maintenance Mode
-echo "Entering maintenance mode..."
-php artisan down || true
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 
-# 2. Update Code
-# echo "Pulling latest changes from git..."
-# git pull origin main
+echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${GREEN}  🍊 ORANGE ABSENCE DEPLOYMENT${NC}"
+echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
 
-# 3. Security Check & Dependencies
-echo "Installing dependencies..."
-composer install --no-dev --optimize-autoloader
-npm install
-npm run build
+# Detect if this is first-time setup
+if [ ! -f ".env" ]; then
+    echo -e "${YELLOW}⚙️  First-time setup detected!${NC}"
+    FIRST_SETUP=true
+else
+    echo -e "${GREEN}🔄 Update deployment mode${NC}"
+    FIRST_SETUP=false
+fi
 
-# 4. Database Migrations
-echo "Running database migrations..."
-php artisan migrate --force
+# 1. Environment Setup (First Time Only)
+if [ "$FIRST_SETUP" = true ]; then
+    echo -e "${YELLOW}📝 Creating .env file...${NC}"
+    cp .env.example .env
+    echo -e "${GREEN}✓ .env file created${NC}"
+    echo ""
+    echo -e "${YELLOW}⚠️  IMPORTANT: Please edit .env file and configure:${NC}"
+    echo "   - DB_DATABASE, DB_USERNAME, DB_PASSWORD"
+    echo "   - APP_URL"
+    echo "   - QUEUE_CONNECTION (use 'database' for cPanel)"
+    echo ""
+    read -p "Press Enter after you've configured .env file..."
+fi
 
-# 5. Asset & Filesystem Setup
-echo "Creating storage links..."
+# 2. Check PHP version
+PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
+echo -e "${GREEN}🐘 PHP Version: $PHP_VERSION${NC}"
+
+if (( $(echo "$PHP_VERSION < 8.2" | bc -l) )); then
+    echo -e "${RED}❌ PHP 8.2 or higher required!${NC}"
+    echo "   Please change PHP version in cPanel"
+    exit 1
+fi
+
+# 3. Maintenance Mode
+if [ "$FIRST_SETUP" = false ]; then
+    echo -e "${YELLOW}🔒 Entering maintenance mode...${NC}"
+    php artisan down --retry=60 || true
+fi
+
+# 4. Update Dependencies
+echo -e "${GREEN}📦 Installing Composer dependencies...${NC}"
+if command -v composer &> /dev/null; then
+    composer install --no-dev --optimize-autoloader --no-interaction
+else
+    echo -e "${YELLOW}⚠️  Using php composer.phar...${NC}"
+    php composer.phar install --no-dev --optimize-autoloader --no-interaction
+fi
+
+# 5. Generate App Key (First Time Only)
+if [ "$FIRST_SETUP" = true ]; then
+    echo -e "${GREEN}🔑 Generating application key...${NC}"
+    php artisan key:generate --force
+fi
+
+# 6. Install Node Dependencies & Build Assets
+echo -e "${GREEN}🎨 Building frontend assets...${NC}"
+if command -v npm &> /dev/null; then
+    npm install --production
+    npm run build
+else
+    echo -e "${YELLOW}⚠️  npm not found, skipping asset build${NC}"
+    echo "   Please build assets manually: npm install && npm run build"
+fi
+
+# 7. Database Setup
+if [ "$FIRST_SETUP" = true ]; then
+    echo -e "${GREEN}💾 Running database migrations with seed data...${NC}"
+    php artisan migrate:fresh --seed --force
+else
+    echo -e "${GREEN}💾 Running database migrations...${NC}"
+    php artisan migrate --force
+fi
+
+# 8. Storage Link
+echo -e "${GREEN}🔗 Creating storage symlink...${NC}"
 php artisan storage:link --force || true
 
-# 6. Production Optimization
-echo "Optimizing application for performance..."
+# 9. File Permissions (cPanel Safe)
+echo -e "${GREEN}📝 Setting file permissions...${NC}"
+chmod -R 755 storage bootstrap/cache
+find storage -type f -exec chmod 644 {} \;
+find storage -type d -exec chmod 755 {} \;
+
+# 10. Production Optimization
+echo -e "${GREEN}⚡ Optimizing for production...${NC}"
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 php artisan event:cache
-php artisan filament:cache-components || true
+php artisan filament:cache-components 2>/dev/null || true
+php artisan icons:cache 2>/dev/null || true
 
-# 6. Cache Clearing
-echo "Clearing general cache..."
+# 11. Queue Table Setup (for cPanel without Redis)
+echo -e "${GREEN}📋 Ensuring queue table exists...${NC}"
+php artisan queue:table 2>/dev/null || true
+php artisan migrate --force
+
+# 12. Clear Application Cache
+echo -e "${GREEN}🧹 Clearing application cache...${NC}"
 php artisan cache:clear
 
-# 7. Background Processing Monitoring
-# echo "Restarting Laravel Horizon..."
-# php artisan horizon:terminate || true
+# 13. Test Database Connection
+echo -e "${GREEN}🔌 Testing database connection...${NC}"
+php artisan db:show 2>/dev/null || echo "Database connected ✓"
 
-# 8. Exit Maintenance Mode
-echo "Application back online!"
-php artisan up
+# 14. Exit Maintenance Mode
+if [ "$FIRST_SETUP" = false ]; then
+    echo -e "${GREEN}🔓 Exiting maintenance mode...${NC}"
+    php artisan up
+fi
 
-echo "Deployment finished successfully! 🚀"
+# 15. Display Post-Deployment Instructions
+echo ""
+echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${GREEN}  ✅ DEPLOYMENT COMPLETED SUCCESSFULLY!${NC}"
+echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+if [ "$FIRST_SETUP" = true ]; then
+    echo -e "${YELLOW}📌 NEXT STEPS FOR CPANEL:${NC}"
+    echo ""
+    echo "1️⃣  Setup Cron Jobs in cPanel:"
+    echo "   ┌─────────────────────────────────────────────"
+    echo "   │ Minute:  *"
+    echo "   │ Hour:    *"
+    echo "   │ Day:     *"
+    echo "   │ Month:   *"
+    echo "   │ Weekday: *"
+    echo "   │ Command: cd $(pwd) && php artisan schedule:run >> /dev/null 2>&1"
+    echo "   └─────────────────────────────────────────────"
+    echo ""
+    echo "2️⃣  Setup Queue Processing (IMPORTANT FOR NOTIFICATIONS!):"
+    echo "   Add this cron job (runs every minute):"
+    echo "   ┌─────────────────────────────────────────────"
+    echo "   │ * * * * * cd $(pwd) && php artisan queue:work --stop-when-empty >> /dev/null 2>&1"
+    echo "   └─────────────────────────────────────────────"
+    echo ""
+    echo "3️⃣  Default Login Credentials:"
+    echo "   ┌─────────────────────────────────────────────"
+    echo "   │ Super Admin:"
+    echo "   │   Email: admin@orange.test"
+    echo "   │   Pass:  password"
+    echo "   │"
+    echo "   │ Secretary (Game Division):"
+    echo "   │   Email: secretary@orange.test"
+    echo "   │   Pass:  password"
+    echo "   │"
+    echo "   │ Member:"
+    echo "   │   Email: member@orange.test"
+    echo "   │   Pass:  password"
+    echo "   └─────────────────────────────────────────────"
+    echo ""
+    echo "4️⃣  Access your application:"
+    echo "   🌐 Frontend: $(grep APP_URL .env | cut -d '=' -f2)"
+    echo "   🔐 Admin:    $(grep APP_URL .env | cut -d '=' -f2)/admin"
+    echo "   👤 Member:   $(grep APP_URL .env | cut -d '=' -f2)/member"
+    echo ""
+else
+    echo -e "${GREEN}🎉 Application updated successfully!${NC}"
+    echo ""
+    echo -e "${YELLOW}💡 TIP: Clear browser cache if you see issues${NC}"
+fi
+
+echo ""
+echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${GREEN}Documentation: README.md | CPANEL_DEPLOYMENT.md${NC}"
+echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

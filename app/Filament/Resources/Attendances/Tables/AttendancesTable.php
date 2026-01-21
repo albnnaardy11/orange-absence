@@ -13,6 +13,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
 
 class AttendancesTable
 {
@@ -47,9 +48,23 @@ class AttendancesTable
                     ->size(40)
                     ->circular()
                     ->openUrlInNewTab(),
-                IconColumn::make('is_approved')
+                TextColumn::make('is_approved')
                     ->label('Approved')
-                    ->boolean()
+                    ->formatStateUsing(function ($state, Attendance $record) {
+                        // Hanya tampilkan status approval untuk izin/sakit
+                        if (in_array($record->status, ['izin', 'sakit'])) {
+                            return $state ? '✓ Disetujui' : '⏳ Menunggu';
+                        }
+                        // Untuk hadir dan alfa, tidak perlu approval
+                        return '-';
+                    })
+                    ->badge()
+                    ->color(function ($state, Attendance $record) {
+                        if (in_array($record->status, ['izin', 'sakit'])) {
+                            return $state ? 'success' : 'warning';
+                        }
+                        return 'gray';
+                    })
                     ->sortable(),
             ])
             ->filters([
@@ -63,6 +78,43 @@ class AttendancesTable
                         'sakit' => 'Sakit',
                         'alfa' => 'Alfa',
                     ]),
+                SelectFilter::make('week')
+                    ->label('Minggu Ke')
+                    ->options(function () {
+                        $options = [];
+                        $startOfMonth = now()->startOfMonth();
+                        $endOfMonth = now()->endOfMonth();
+                        $currentDate = $startOfMonth->copy();
+                        
+                        $weekNumber = 1;
+                        while ($currentDate->lte($endOfMonth)) {
+                            $startOfWeek = $currentDate->copy()->startOfWeek();
+                            $endOfWeek = $currentDate->copy()->endOfWeek();
+                            
+                            $value = $startOfWeek->format('Y-m-d') . ',' . $endOfWeek->format('Y-m-d');
+                            $label = "Minggu ke-{$weekNumber} ({$startOfWeek->format('d M')} - {$endOfWeek->format('d M')})";
+                            
+                            $options[$value] = $label;
+                            
+                            $currentDate->addWeek();
+                            $weekNumber++;
+                        }
+                        
+                        return $options;
+                    })
+                    ->query(function (Builder $query, array $data) {
+                        if (!empty($data['value'])) {
+                            [$start, $end] = explode(',', $data['value']);
+                            $query->whereBetween('created_at', [
+                                \Carbon\Carbon::parse($start)->startOfDay(),
+                                \Carbon\Carbon::parse($end)->endOfDay()
+                            ]);
+                        }
+                    })
+                    ->default(function () {
+                        $now = now();
+                        return $now->startOfWeek()->format('Y-m-d') . ',' . $now->endOfWeek()->format('Y-m-d');
+                    }),
             ])
             ->headerActions([
                 Action::make('monthly_report')
