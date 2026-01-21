@@ -10,6 +10,7 @@ use Filament\Forms;
 use Filament\Notifications\Notification;
 use App\Services\VerificationCodeService;
 use App\Models\Attendance;
+use App\Models\Schedule;
 use App\Models\Division;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -69,7 +70,7 @@ class Absen extends Page implements HasForms
                 throw new \Exception("Payload QR kosong.");
             }
 
-            // Note: $this->user_lat and $this->user_long are now bound from JS
+            // Sync User Location from JS is done via @this.set
 
             // Decrypt QR
             try {
@@ -86,9 +87,9 @@ class Absen extends Page implements HasForms
 
             $divisionId = $payload['division_id'];
 
-            // Expiry check (60 seconds)
-            if (abs(now()->timestamp - $payload['timestamp']) > 60) {
-                 throw new \Exception("QR Code sudah kadaluwarsa. Minta Admin refresh QR.");
+            // Expiry check (180 seconds for stability)
+            if (abs(now()->timestamp - $payload['timestamp']) > 180) {
+                 throw new \Exception("QR Code sudah kadaluwarsa (3 menit). Silakan minta Admin refresh QR.");
             }
 
             // Check distance
@@ -100,14 +101,14 @@ class Absen extends Page implements HasForms
             // Geofencing Check
             if ($division->latitude && $division->longitude) {
                 if (!$this->user_lat || !$this->user_long) {
-                     // Try to see if cookie fallback works or just fail
                      throw new \Exception("Lokasi GPS Anda belum terdeteksi. Pastikan GPS aktif.");
                 }
 
                 $distance = $this->calculateDistance($this->user_lat, $this->user_long, $division->latitude, $division->longitude);
-                if ($distance > 100) {
+                // standard mobile GPS can be off, 200m is safer
+                if ($distance > 200) {
                     \Illuminate\Support\Facades\Log::warning("User {$userId} Geofence fail. Dist: {$distance}m");
-                    throw new \Exception("Anda berada di luar jangkauan radius absen ($distance meter). Maksimal 100m.");
+                    throw new \Exception("Luar jangkauan ($distance meter). Maksimal 200m.");
                 }
             }
 
@@ -118,47 +119,57 @@ class Absen extends Page implements HasForms
                 ->exists();
 
             if ($alreadyAttended) {
-                Notification::make()->title('Info')->body('Anda sudah absen di divisi ini hari ini.')->warning()->send();
-                 $this->dispatch('attendance-success'); // Stop spinner even if duplicate
+                 $this->dispatch('attendance-success'); 
                  $this->qr_payload = null;
-                return;
+                 Notification::make()->title('Info')->body('Anda sudah absen hari ini.')->warning()->send();
+                 return;
             }
+
+            // Try to Link to active Schedule for history details
+            $nowTime = now()->format('H:i:s');
+            $currentDay = now()->format('l');
+            $activeSchedule = Schedule::where('division_id', $divisionId)
+                ->where('day', $currentDay)
+                ->where('start_time', '<=', $nowTime)
+                ->where('end_time', '>=', $nowTime)
+                ->first();
 
             // Create Attendance
             $attendance = Attendance::create([
                 'user_id' => Auth::id(),
                 'division_id' => $divisionId,
+                'schedule_id' => $activeSchedule?->id,
                 'status' => 'hadir',
                 'is_approved' => true,
                 'latitude' => $this->user_lat,
                 'longitude' => $this->user_long,
                 'is_qr_verified' => true,
+                'verified_at' => now(),
             ]);
 
             \Illuminate\Support\Facades\Log::info("User {$userId} success QR attendance ID: " . $attendance->id);
 
             Notification::make()
                 ->title('Berhasil Absen!')
-                ->body('Absensi Anda telah tercatat.')
+                ->body('Absensi Anda telah tercatat' . ($activeSchedule ? " di {$activeSchedule->classroom}." : "."))
                 ->success()
                 ->send();
             
             $this->dispatch('attendance-success'); 
-            $this->qr_payload = null; // Reset
+            $this->qr_payload = null;
             $this->form->fill(); 
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("User {$userId} QR Error: " . $e->getMessage());
-            Notification::make()->title('Gagal Absen')->body($e->getMessage())->danger()->send();
-            
-            // Dispatch failure too to stop spinner
             $this->dispatch('attendance-failure', error: $e->getMessage());
+            Notification::make()->title('Gagal Absen')->body($e->getMessage())->danger()->send();
         }
     }
 
     public function submit(?string $manualPayload = null): void
     {
-        $throttleKey = 'absen-qr:' . Auth::id();
+        $userId = Auth::id();
+        $throttleKey = 'absen-manual:' . $userId;
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             Notification::make()->title('Terlalu banyak mencoba')->danger()->send();
             return;
@@ -180,33 +191,25 @@ class Absen extends Page implements HasForms
                 throw new \Exception("QR Code tidak valid.");
             }
 
-            // Validation basics
             if (!isset($payload['division_id']) || !isset($payload['timestamp'])) {
                 throw new \Exception("Payload QR tidak lengkap.");
             }
 
-            // Auto-detect division if not selected
             $divisionId = $data['division_id'] ?? $payload['division_id'];
 
-            if ($payload['division_id'] != $divisionId) {
-                throw new \Exception("QR Code ini untuk divisi lain.");
-            }
-
-            // Expiry check (60 seconds)
-            if (abs(now()->timestamp - $payload['timestamp']) > 60) {
-                throw new \Exception("QR Code sudah kadaluwarsa, silakan minta Admin refresh QR.");
+            if (abs(now()->timestamp - $payload['timestamp']) > 180) {
+                throw new \Exception("QR Code sudah kadaluwarsa.");
             }
 
             // Geofencing
             $division = Division::find($divisionId);
             if ($division && $division->latitude && $division->longitude && $this->user_lat && $this->user_long) {
-                if ($this->calculateDistance($this->user_lat, $this->user_long, $division->latitude, $division->longitude) > 100) {
-                    throw new \Exception("Anda di luar jangkauan (>100m).");
+                if ($this->calculateDistance($this->user_lat, $this->user_long, $division->latitude, $division->longitude) > 200) {
+                    throw new \Exception("Anda di luar jangkauan radius.");
                 }
             }
 
-            // Check if already attended today for this division/session
-            $alreadyAttended = Attendance::where('user_id', Auth::id())
+            $alreadyAttended = Attendance::where('user_id', $userId)
                 ->where('division_id', $divisionId)
                 ->whereDate('created_at', now()->toDateString())
                 ->exists();
@@ -215,18 +218,27 @@ class Absen extends Page implements HasForms
                 throw new \Exception("Anda sudah melakukan absensi untuk divisi ini hari ini.");
             }
 
-            // Create Attendance
+            $nowTime = now()->format('H:i:s');
+            $currentDay = now()->format('l');
+            $activeSchedule = Schedule::where('division_id', $divisionId)
+                ->where('day', $currentDay)
+                ->where('start_time', '<=', $nowTime)
+                ->where('end_time', '>=', $nowTime)
+                ->first();
+
             Attendance::create([
-                'user_id' => Auth::id(),
+                'user_id' => $userId,
                 'division_id' => $divisionId,
+                'schedule_id' => $activeSchedule?->id,
                 'status' => 'hadir',
                 'is_approved' => true,
                 'latitude' => $this->user_lat,
                 'longitude' => $this->user_long,
                 'is_qr_verified' => true,
+                'verified_at' => now(),
             ]);
 
-            Notification::make()->title('Absensi QR Berhasil!')->body('Anda sudah absen!')->success()->send();
+            Notification::make()->title('Absensi Berhasil!')->success()->send();
             $this->form->fill();
 
         } catch (\Exception $e) {
