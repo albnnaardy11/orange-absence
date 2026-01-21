@@ -51,8 +51,12 @@ class Absen extends Page implements HasForms
 
     public function handleQrScan($qrPayload, $lat, $long): void
     {
-        $throttleKey = 'absen-qr:' . Auth::id();
+        $userId = Auth::id();
+        \Illuminate\Support\Facades\Log::info("User {$userId} attempting QR Scan.");
+
+        $throttleKey = 'absen-qr:' . $userId;
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            \Illuminate\Support\Facades\Log::warning("User {$userId} QR Scan rate limited.");
             Notification::make()->title('Terlalu banyak mencoba')->danger()->send();
             return;
         }
@@ -71,6 +75,7 @@ class Absen extends Page implements HasForms
             try {
                 $payload = \Illuminate\Support\Facades\Crypt::decrypt($qrPayload);
             } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("User {$userId} Invalid QR: " . $e->getMessage());
                 throw new \Exception("QR Code tidak valid atau rusak.");
             }
 
@@ -79,12 +84,11 @@ class Absen extends Page implements HasForms
                 throw new \Exception("Format QR tidak dikenali.");
             }
 
-            // Trust QR division ID primarily for QR mode
             $divisionId = $payload['division_id'];
 
             // Expiry check (60 seconds)
             if (abs(now()->timestamp - $payload['timestamp']) > 60) {
-                throw new \Exception("QR Code sudah kadaluwarsa. Minta Admin refresh QR.");
+                 throw new \Exception("QR Code sudah kadaluwarsa. Minta Admin refresh QR.");
             }
 
             // Check distance
@@ -94,17 +98,14 @@ class Absen extends Page implements HasForms
             }
 
             // Geofencing Check
-            // Allow if division has no coords set (optional, strictly speaking we usually want it)
-            // Assuming strict mode based on user feedback
             if ($division->latitude && $division->longitude) {
                 if (!$this->user_lat || !$this->user_long) {
-                     // Try to see if form state has it or livewire property has it
-                     // If still null, we can't verify location
                      throw new \Exception("Lokasi GPS Anda belum terdeteksi. Pastikan GPS aktif.");
                 }
 
                 $distance = $this->calculateDistance($this->user_lat, $this->user_long, $division->latitude, $division->longitude);
                 if ($distance > 100) {
+                    \Illuminate\Support\Facades\Log::warning("User {$userId} Geofence fail. Dist: {$distance}m");
                     throw new \Exception("Anda berada di luar jangkauan radius absen ($distance meter). Maksimal 100m.");
                 }
             }
@@ -116,12 +117,12 @@ class Absen extends Page implements HasForms
                 ->exists();
 
             if ($alreadyAttended) {
-                Notification::make()->title('Gagal Absen')->body('Anda sudah absen di divisi ini hari ini.')->warning()->send();
+                Notification::make()->title('Info')->body('Anda sudah absen di divisi ini hari ini.')->warning()->send();
                 return;
             }
 
             // Create Attendance
-            Attendance::create([
+            $attendance = Attendance::create([
                 'user_id' => Auth::id(),
                 'division_id' => $divisionId,
                 'status' => 'hadir',
@@ -131,19 +132,22 @@ class Absen extends Page implements HasForms
                 'is_qr_verified' => true,
             ]);
 
+            \Illuminate\Support\Facades\Log::info("User {$userId} success QR attendance ID: " . $attendance->id);
+
             Notification::make()
                 ->title('Berhasil Absen!')
                 ->body('Absensi Anda telah tercatat.')
                 ->success()
                 ->send();
             
-            // Generate Javascript event if needed, or just standard Livewire response
             $this->dispatch('attendance-success'); 
-
-            $this->form->fill(); // Reset form
+            $this->form->fill(); 
 
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("User {$userId} QR Error: " . $e->getMessage());
             Notification::make()->title('Gagal Absen')->body($e->getMessage())->danger()->send();
+            // Re-throw so frontend knows it failed? No, Notification is better info, but we need frontend to stop spinner
+            throw $e; 
         }
     }
 

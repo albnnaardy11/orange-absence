@@ -13,11 +13,11 @@
                 <div id="reader" class="w-full max-w-sm rounded-2xl overflow-hidden border-4 border-orange-500 bg-black shadow-2xl"></div>
                 
                 <div id="scan-result" class="hidden mt-6 p-4 bg-green-500 text-white font-bold rounded-xl w-full text-center animate-bounce">
-                    ✅ QR Terdeteksi! Memproses...
+                     QR Terdeteksi! Memproses...
                 </div>
 
                 <div id="ssl-warning" class="hidden mt-4 p-2 bg-red-100 text-red-800 text-xs rounded-lg text-center">
-                    ⚠️ Kamera & GPS membutuhkan HTTPS.
+                     Kamera & GPS membutuhkan HTTPS.
                 </div>
 
                 <x-filament::button id="start-scan-btn" class="mt-8 w-full py-4 text-lg shadow-lg" color="warning" icon="heroicon-o-camera">
@@ -33,56 +33,182 @@
     </div>
 
     {{-- GPS Status --}}
-    <div id="gps-status" class="fixed top-18 right-4 z-50 flex items-center gap-x-2 px-3 py-1.5 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 opacity-0 transition-all">
-        <div class="h-2 w-2 rounded-full bg-red-500" id="gps-dot"></div>
-        <span class="text-xs font-bold" id="gps-text">GPS...</span>
+    <div id="gps-status" class="fixed top-20 right-4 z-50 flex items-center gap-x-2 px-3 py-1.5 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 opacity-0 transition-opacity duration-500">
+        <div class="h-2 w-2 rounded-full bg-red-500 animate-pulse" id="gps-dot"></div>
+        <span class="text-xs font-bold text-gray-700 dark:text-gray-300" id="gps-text">Mencari GPS...</span>
     </div>
 
+    {{-- Scanner Overlay Style --}}
+    <style>
+        #reader { border: none !important; }
+        #reader video { object-fit: cover; border-radius: 1rem; }
+        .scan-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            pointer-events: none;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .scan-box {
+            width: 250px; height: 250px;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 0 0 4000px rgba(0,0,0,0.5); /* Dim outside */
+            border-radius: 20px;
+            position: relative;
+        }
+        .scan-box::after {
+            content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
+            border: 4px solid #f97316; /* Orange border */
+            border-radius: 24px;
+            clip-path: polygon(0 0, 0 40px, 40px 0, 100% 0, 100% 40px, calc(100% - 40px) 0, 100% 100%, 100% calc(100% - 40px), calc(100% - 40px) 100%, 0 100%, 0 calc(100% - 40px), 40px 100%);
+            animation: pulse-border 2s infinite;
+        }
+        @keyframes pulse-border {
+            0% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
+            100% { opacity: 0.8; transform: scale(1); }
+        }
+    </style>
+
     <script>
+        // --- GPS Logic ---
+        window.userLat = null;
+        window.userLong = null;
+
         function updateGPS() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    @this.set('user_lat', pos.coords.latitude);
-                    @this.set('user_long', pos.coords.longitude);
-                    document.getElementById('gps-status').classList.remove('opacity-0');
-                    document.getElementById('gps-dot').classList.replace('bg-red-500', 'bg-green-500');
-                    document.getElementById('gps-text').innerText = 'GPS: OK';
-                });
+            if (!navigator.geolocation) {
+                document.getElementById('gps-text').innerText = 'GPS Error';
+                return;
             }
+            navigator.geolocation.watchPosition(
+                (pos) => {
+                    window.userLat = pos.coords.latitude;
+                    window.userLong = pos.coords.longitude;
+                    
+                    const el = document.getElementById('gps-status');
+                    const dot = document.getElementById('gps-dot');
+                    const text = document.getElementById('gps-text');
+                    
+                    if (el) el.classList.remove('opacity-0');
+                    if (dot) {
+                         dot.classList.replace('bg-red-500', 'bg-green-500');
+                         dot.classList.remove('animate-pulse');
+                    }
+                    if (text) text.innerText = 'GPS: Terkunci';
+                    
+                    // Sync to Livewire quietly
+                    @this.set('user_lat', window.userLat, true); // defer
+                    @this.set('user_long', window.userLong, true); // defer
+                },
+                (err) => {
+                    console.error("GPS Error", err);
+                },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+            );
         }
         document.addEventListener('DOMContentLoaded', updateGPS);
 
+        // --- SCANNER Logic ---
         let html5QrcodeScanner = null;
-        function onScanSuccess(decodedText) {
-            // Visual feedback
-            const resDiv = document.getElementById('scan-result');
-            resDiv.classList.remove('hidden');
-            
-            // Auto submit to Filament
-            @this.call('submit', decodedText).then(() => {
-                setTimeout(() => { resDiv.classList.add('hidden'); }, 3000);
-            });
+        let isScanning = false;
+        let lastScanTime = 0;
+        const DEBOUNCE_MS = 3000;
 
+        async function onScanSuccess(decodedText) {
+            const now = Date.now();
+            if (isScanning || (now - lastScanTime < DEBOUNCE_MS)) {
+                return;
+            }
+
+            isScanning = true;
+            lastScanTime = now;
+            console.log("QR Found:", decodedText);
+
+            // 1. Haptic Feedback
+            if (navigator.vibrate) {
+                navigator.vibrate(200);
+            }
+
+            // 2. Play Sound (Optional, keeping silent for now)
+
+            // 3. UI Feedback
+            const resDiv = document.getElementById('scan-result');
+            if (resDiv) {
+                resDiv.innerHTML = " Memproses...";
+                resDiv.classList.remove('hidden', 'bg-green-500', 'bg-red-500');
+                resDiv.classList.add('bg-blue-500', 'text-white');
+            }
+
+            // 4. Stop Scanner (optimize resource)
             if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear().catch(error => console.error("Failed to clear scanner", error));
+                html5QrcodeScanner.pause();
+            }
+
+            // 5. Submit to Backend
+            try {
+                // Use the new robust handler with GPS data
+                await @this.handleQrScan(decodedText, window.userLat, window.userLong);
+                
+                // Success UI
+                if (resDiv) {
+                    resDiv.innerHTML = " Berhasil!";
+                    resDiv.classList.remove('bg-blue-500');
+                    resDiv.classList.add('bg-green-500');
+                    setTimeout(() => { resDiv.classList.add('hidden'); }, 3000);
+                }
+            } catch (error) {
+                // Error UI
+                if (resDiv) {
+                    resDiv.innerHTML = " Gagal: " + error;
+                    resDiv.classList.remove('bg-blue-500');
+                    resDiv.classList.add('bg-red-500');
+                }
+                // Resume scanning after error?
+                // html5QrcodeScanner.resume();
+            } finally {
+                // Reset flag after delay
+                setTimeout(() => { 
+                    isScanning = false; 
+                    if (html5QrcodeScanner) html5QrcodeScanner.resume();
+                }, DEBOUNCE_MS);
             }
         }
 
         document.getElementById('start-scan-btn').addEventListener('click', () => {
             document.getElementById('scan-result').classList.add('hidden');
             
+            // Re-init if needed
             if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear().then(() => {
-                    html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
-                    html5QrcodeScanner.render(onScanSuccess);
-                }).catch(err => {
-                    html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
-                    html5QrcodeScanner.render(onScanSuccess);
-                });
-            } else {
-                html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
-                html5QrcodeScanner.render(onScanSuccess);
+                try {
+                    html5QrcodeScanner.clear();
+                } catch(e) {}
             }
+            
+            startScanner();
         });
+
+        function startScanner() {
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader", 
+                { 
+                    fps: 30, // High FPS (Target 30-60)
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0,
+                    // Advanced Camera Config
+                    videoConstraints: {
+                        width: { min: 640, ideal: 1920, max: 1920 },
+                        height: { min: 480, ideal: 1080, max: 1080 },
+                        facingMode: "environment", // Backend camera
+                        focusMode: "continuous" // Attempt to force focus
+                    },
+                    formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ], // Optimized for QR
+                },
+                /* verbose= */ false
+            );
+            
+            // Customize the render to remove default overlay if possible, 
+            // but Html5QrcodeScanner is high-level. 
+            // We use CSS to make it look better.
+            html5QrcodeScanner.render(onScanSuccess, (err) => { /* ignore frame errors */ });
+        }
     </script>
 </x-filament-panels::page>
