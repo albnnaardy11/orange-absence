@@ -123,55 +123,70 @@
             lastScanTime = now;
             console.log("QR Found:", decodedText);
 
-            // 1. Haptic Feedback
-            if (navigator.vibrate) {
-                navigator.vibrate(200);
-            }
+            if (navigator.vibrate) navigator.vibrate(200);
 
-            // 2. Play Sound (Optional, keeping silent for now)
-
-            // 3. UI Feedback
             const resDiv = document.getElementById('scan-result');
             if (resDiv) {
-                resDiv.innerHTML = " Memproses...";
+                resDiv.innerHTML = "🔄 Memproses...";
                 resDiv.classList.remove('hidden', 'bg-green-500', 'bg-red-500');
                 resDiv.classList.add('bg-blue-500', 'text-white');
             }
 
-            // 4. Stop Scanner (optimize resource)
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.pause();
-            }
+            if (html5QrcodeScanner) html5QrcodeScanner.pause();
 
-            // 5. Submit to Backend
             try {
-                // Use the new robust handler with GPS data
-                await @this.handleQrScan(decodedText, window.userLat, window.userLong);
+                // Set Properties First (Robust method)
+                console.log("Setting Livewire properties...");
                 
-                // Success UI
-                if (resDiv) {
-                    resDiv.innerHTML = " Berhasil!";
-                    resDiv.classList.remove('bg-blue-500');
-                    resDiv.classList.add('bg-green-500');
-                    setTimeout(() => { resDiv.classList.add('hidden'); }, 3000);
+                // Ensure GPS is set if available
+                if (window.userLat && window.userLong) {
+                    await @this.set('user_lat', window.userLat);
+                    await @this.set('user_long', window.userLong);
+                } else {
+                    console.warn("GPS not ready yet, sending nulls.");
                 }
+
+                await @this.set('qr_payload', decodedText);
+                
+                // Trigger Action
+                console.log("Calling saveAttendance...");
+                await @this.call('saveAttendance');
+                
             } catch (error) {
-                // Error UI
+                console.error("Javascript Error during submission:", error);
                 if (resDiv) {
-                    resDiv.innerHTML = " Gagal: " + error;
+                    resDiv.innerHTML = "❌ Gagal: " + error;
                     resDiv.classList.remove('bg-blue-500');
                     resDiv.classList.add('bg-red-500');
                 }
-                // Resume scanning after error?
-                // html5QrcodeScanner.resume();
             } finally {
-                // Reset flag after delay
-                setTimeout(() => { 
+                // We rely on Livewire events 'attendance-success' or 'attendance-failure' 
+                // to update UI further, but we reset the flag here just in case.
+                 setTimeout(() => { 
                     isScanning = false; 
                     if (html5QrcodeScanner) html5QrcodeScanner.resume();
                 }, DEBOUNCE_MS);
             }
         }
+
+        // Listen for backend events
+        window.addEventListener('attendance-success', event => {
+            const resDiv = document.getElementById('scan-result');
+            if (resDiv) {
+                resDiv.innerHTML = "✅ Berhasil!";
+                resDiv.classList.remove('bg-blue-500', 'bg-red-500');
+                resDiv.classList.add('bg-green-500');
+                setTimeout(() => { resDiv.classList.add('hidden'); }, 4000);
+            }
+        });
+
+        window.addEventListener('attendance-failure', event => {
+             const resDiv = document.getElementById('scan-result');
+             if (resDiv) {
+                resDiv.innerHTML = "❌ Gagal: " + (event.detail.error || 'Server Error');
+                resDiv.classList.add('bg-red-500');
+             }
+        });
 
         document.getElementById('start-scan-btn').addEventListener('click', () => {
             document.getElementById('scan-result').classList.add('hidden');

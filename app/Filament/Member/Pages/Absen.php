@@ -49,10 +49,12 @@ class Absen extends Page implements HasForms
             ->statePath('data');
     }
 
-    public function handleQrScan($qrPayload, $lat, $long): void
+    public ?string $qr_payload = null;
+
+    public function saveAttendance(): void
     {
         $userId = Auth::id();
-        \Illuminate\Support\Facades\Log::info("User {$userId} attempting QR Scan.");
+        \Illuminate\Support\Facades\Log::info("User {$userId} triggering saveAttendance. Payload: " . substr($this->qr_payload, 0, 10) . "...");
 
         $throttleKey = 'absen-qr:' . $userId;
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
@@ -63,17 +65,15 @@ class Absen extends Page implements HasForms
         RateLimiter::hit($throttleKey, 60);
 
         try {
-            if (empty($qrPayload)) {
+            if (empty($this->qr_payload)) {
                 throw new \Exception("Payload QR kosong.");
             }
 
-            // Sync User Location from JS
-            $this->user_lat = $lat;
-            $this->user_long = $long;
+            // Note: $this->user_lat and $this->user_long are now bound from JS
 
             // Decrypt QR
             try {
-                $payload = \Illuminate\Support\Facades\Crypt::decrypt($qrPayload);
+                $payload = \Illuminate\Support\Facades\Crypt::decrypt($this->qr_payload);
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("User {$userId} Invalid QR: " . $e->getMessage());
                 throw new \Exception("QR Code tidak valid atau rusak.");
@@ -100,6 +100,7 @@ class Absen extends Page implements HasForms
             // Geofencing Check
             if ($division->latitude && $division->longitude) {
                 if (!$this->user_lat || !$this->user_long) {
+                     // Try to see if cookie fallback works or just fail
                      throw new \Exception("Lokasi GPS Anda belum terdeteksi. Pastikan GPS aktif.");
                 }
 
@@ -118,6 +119,8 @@ class Absen extends Page implements HasForms
 
             if ($alreadyAttended) {
                 Notification::make()->title('Info')->body('Anda sudah absen di divisi ini hari ini.')->warning()->send();
+                 $this->dispatch('attendance-success'); // Stop spinner even if duplicate
+                 $this->qr_payload = null;
                 return;
             }
 
@@ -141,13 +144,15 @@ class Absen extends Page implements HasForms
                 ->send();
             
             $this->dispatch('attendance-success'); 
+            $this->qr_payload = null; // Reset
             $this->form->fill(); 
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("User {$userId} QR Error: " . $e->getMessage());
             Notification::make()->title('Gagal Absen')->body($e->getMessage())->danger()->send();
-            // Re-throw so frontend knows it failed? No, Notification is better info, but we need frontend to stop spinner
-            throw $e; 
+            
+            // Dispatch failure too to stop spinner
+            $this->dispatch('attendance-failure', error: $e->getMessage());
         }
     }
 
