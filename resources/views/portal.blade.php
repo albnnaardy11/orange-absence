@@ -211,8 +211,9 @@
                 <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                 <span>Status: Online</span>
             </div>
-            <p class="text-gray-600 text-xs md:text-sm mt-4 md:mt-6 font-light opacity-50 px-4">&copy; {{ date('Y') }} Orange Absence. All rights reserved.</p>
-        </footer>
+<p class="text-gray-600 text-xs md:text-sm mt-4 md:mt-6 font-light opacity-50 px-4">
+    &copy; {{ date('Y') }} <strong>Orange Absence</strong>. Developed by Ardy Albanna.
+</p>                                </footer>
     </div>
 </body>
 </html>
