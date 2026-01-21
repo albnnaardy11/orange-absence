@@ -28,7 +28,18 @@
                     <div id="reader" class="w-full max-w-xs sm:max-w-sm rounded-lg overflow-hidden border-2 border-gray-300 dark:border-gray-700 bg-black"></div>
                     
                     <div id="scan-result" class="hidden mt-4 p-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-lg w-full max-w-xs sm:max-w-sm text-center">
-                        QR Code Scanned Successfully!
+                        ✅ QR Code Scanned! Processing...
+                    </div>
+                    
+                    <div id="processing-indicator" class="hidden mt-4 flex flex-col items-center justify-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg w-full max-w-xs sm:max-w-sm">
+                        <svg class="animate-spin h-8 w-8 text-blue-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="text-blue-600 dark:text-blue-300 font-semibold">Memproses Absensi...</span>
+                    </div>
+
+                    <div id="scan-error-msg" class="hidden mt-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 text-sm rounded-lg text-center max-w-xs sm:max-w-sm">
                     </div>
 
                     <div id="ssl-warning" class="hidden mt-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 text-xs sm:text-sm rounded-lg text-center max-w-xs sm:max-w-sm">
@@ -155,21 +166,32 @@
         function onScanSuccess(decodedText, decodedResult) {
             console.log(`Scan result: ${decodedText}`, decodedResult);
             
-            @this.set('data.qr_payload', decodedText);
-
-            document.getElementById('scan-result').classList.remove('hidden');
-            
+            // Stop scanning immediately on success
             if (html5QrcodeScanner) {
                  html5QrcodeScanner.clear();
             }
+
+            document.getElementById('scan-result').classList.remove('hidden');
+            document.getElementById('processing-indicator').classList.remove('hidden');
+
+            // Direct call to backend with Payload AND GPS
+            @this.handleQrScan(decodedText, window.userLat, window.userLong)
+                .then(() => {
+                    document.getElementById('processing-indicator').classList.add('hidden');
+                })
+                .catch(() => {
+                    document.getElementById('processing-indicator').classList.add('hidden');
+                });
         }
 
         function onScanError(errorMessage) {
-            // handle error
+            // handle error silently
         }
 
         document.getElementById('start-scan-btn').addEventListener('click', function() {
             document.getElementById('scan-result').classList.add('hidden');
+            document.getElementById('processing-indicator').classList.add('hidden');
+            document.getElementById('scan-error-msg').classList.add('hidden'); // Clear prev errors
             
             // Clear previous payload when starting scan
             @this.set('data.qr_payload', null);
@@ -183,7 +205,13 @@
 
         function startScanner() {
             html5QrcodeScanner = new Html5QrcodeScanner(
-                "reader", { fps: 10, qrbox: 250 }, /* verbose= */ false);
+                "reader", { 
+                    fps: 30, // Faster scanning
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                }, 
+                /* verbose= */ false
+            );
             html5QrcodeScanner.render(onScanSuccess, onScanError);
         }
 
