@@ -206,9 +206,11 @@
         function startScanner() {
             html5QrcodeScanner = new Html5QrcodeScanner(
                 "reader", { 
-                    fps: 30, // Faster scanning
+                    fps: 30, // High FPS for speed
                     qrbox: { width: 250, height: 250 },
-                    aspectRatio: 1.0
+                    aspectRatio: 1.0,
+                    formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ], // RESTRICT TO QR ONLY FOR SPEED
+                    disableFlip: false // Allow checking mirrored inputs if needed
                 }, 
                 /* verbose= */ false
             );
