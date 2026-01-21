@@ -9,10 +9,10 @@
 <p class="text-gray-500 text-sm">Cukup scan kode QR untuk langsung melakukan absensi</p>
 </div>
 <div class="flex flex-col items-center justify-center">
-<div id="reader" class="w-full max-w-sm rounded-2xl overflow-hidden border-4 border-orange-500 bg-black shadow-2xl relative"></div>
+<div id="reader" wire:ignore class="w-full max-w-sm rounded-2xl overflow-hidden border-4 border-orange-500 bg-black shadow-2xl relative"></div>
 <div id="scan-result" class="hidden mt-6 p-4 bg-orange-500 text-white font-bold rounded-xl w-full text-center shadow-lg">Mendatangi Server...</div>
 <div id="ssl-warning" class="hidden mt-4 p-2 bg-red-100 text-red-800 text-xs rounded-lg text-center">Kamera & GPS membutuhkan HTTPS.</div>
-<x-filament::button id="start-scan-btn" class="mt-8 w-full py-4 text-lg shadow-xl" color="warning" icon="heroicon-o-camera">Buka Kamera / Scan</x-filament::button>
+<x-filament::button id="start-scan-btn" class="mt-8 w-full py-4 text-lg shadow-xl" color="warning" icon="heroicon-o-camera" onclick="startScan()">Buka Kamera / Scan</x-filament::button>
 </div>
 </x-filament::section>
 <div class="hidden">{{ $this->form }}</div>
@@ -47,7 +47,7 @@ const options={enableHighAccuracy:true,timeout:20000,maximumAge:5000};
 const onLocationSuccess=(pos)=>{
 window.userLat=pos.coords.latitude;window.userLong=pos.coords.longitude;gpsStatus='locked';
 renderGPSUI('success',`Lokasi Terkunci (${window.userLat.toFixed(4)})`);
-if(typeof @this!=='undefined'){@this.set('user_lat',window.userLat,true);@this.set('user_long',window.userLong,true)}
+// Optional: Sync silently if needed, but we pass args now
 };
 const onLocationError=(err)=>{console.warn("GPS Error:",err.message);if(gpsStatus!=='locked')renderGPSUI('error','Gagal Mengunci Lokasi')};
 if(watchId)navigator.geolocation.clearWatch(watchId);
@@ -70,7 +70,7 @@ overlay.classList.remove('hidden');if(results){results.innerText="QR Ditemukan! 
 if(scanner)await scanner.pause();
 try{
 if(!window.userLat||!window.userLong)throw new Error("Izin Lokasi/GPS Diperlukan!");
-await @this.set('user_lat',window.userLat);await @this.set('user_long',window.userLong);await @this.set('qr_payload',code);await @this.call('saveAttendance');
+await @this.call('saveAttendance', code, window.userLat, window.userLong);
 }catch(error){
 console.error("Submission Error:",error);document.getElementById('global-processing').classList.add('hidden');isActive=false;
 if(results){results.innerText="Gagal: "+error.message;results.classList.replace('bg-orange-500','bg-red-500')}
@@ -87,7 +87,7 @@ document.getElementById('global-processing').classList.add('hidden');const resul
 if(results){results.innerText="GAGAL: "+(e.detail.error||'Server Side Error');results.classList.replace('bg-orange-500','bg-red-500')}
 setTimeout(()=>{isActive=false;if(scanner)scanner.resume()},4000);
 });
-document.getElementById('start-scan-btn').addEventListener('click',()=>{if(scanner)scanner.clear().then(initScanner).catch(initScanner);else initScanner()});
+function startScan(){if(scanner)scanner.clear().then(initScanner).catch(initScanner);else initScanner()}
 function initScanner(){
 const reader=document.getElementById('reader');if(!reader.querySelector('.scan-frame')){
 reader.insertAdjacentHTML('beforeend',`<div class="scan-frame"><div class="scan-line"></div><div class="scan-focus-area"><div class="c-marker m-tl"></div><div class="c-marker m-tr"></div><div class="c-marker m-bl"></div><div class="c-marker m-br"></div></div></div>`);

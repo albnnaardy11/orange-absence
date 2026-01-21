@@ -52,10 +52,15 @@ class Absen extends Page implements HasForms
 
     public ?string $qr_payload = null;
 
-    public function saveAttendance(): void
+    public function saveAttendance(?string $payloadStr = null, $lat = null, $long = null): void
     {
         $userId = Auth::id();
-        \Illuminate\Support\Facades\Log::info("User {$userId} triggering saveAttendance. Payload: " . substr($this->qr_payload, 0, 10) . "...");
+        // Use arguments if provided, otherwise fallback to component properties
+        $qrPayload = $payloadStr ?? $this->qr_payload;
+        $userLat = $lat ?? $this->user_lat;
+        $userLong = $long ?? $this->user_long;
+
+        \Illuminate\Support\Facades\Log::info("User {$userId} triggering saveAttendance. Payload Len: " . strlen($qrPayload));
 
         $throttleKey = 'absen-qr:' . $userId;
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
@@ -66,15 +71,18 @@ class Absen extends Page implements HasForms
         RateLimiter::hit($throttleKey, 60);
 
         try {
-            if (empty($this->qr_payload)) {
+            if (empty($qrPayload)) {
                 throw new \Exception("Payload QR kosong.");
             }
 
-            // Sync User Location from JS is done via @this.set
+            // Sync User Location from Arguments or State
+            // Note: We don't need to persist these to public properties if we use them locally, 
+            // but for UI consistency if we want to show 'last location' we could.
+            // For now, local use is faster.
 
             // Decrypt QR
             try {
-                $payload = \Illuminate\Support\Facades\Crypt::decrypt($this->qr_payload);
+                $payload = \Illuminate\Support\Facades\Crypt::decrypt($qrPayload);
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("User {$userId} Invalid QR: " . $e->getMessage());
                 throw new \Exception("QR Code tidak valid atau rusak.");
@@ -100,11 +108,11 @@ class Absen extends Page implements HasForms
 
             // Geofencing Check
             if ($division->latitude && $division->longitude) {
-                if (!$this->user_lat || !$this->user_long) {
+                if (!$userLat || !$userLong) {
                      throw new \Exception("Lokasi GPS Anda belum terdeteksi. Pastikan GPS aktif.");
                 }
 
-                $distance = $this->calculateDistance($this->user_lat, $this->user_long, $division->latitude, $division->longitude);
+                $distance = $this->calculateDistance($userLat, $userLong, $division->latitude, $division->longitude);
                 // standard mobile GPS can be off, 200m is safer
                 if ($distance > 200) {
                     \Illuminate\Support\Facades\Log::warning("User {$userId} Geofence fail. Dist: {$distance}m");
@@ -141,8 +149,8 @@ class Absen extends Page implements HasForms
                 'schedule_id' => $activeSchedule?->id,
                 'status' => 'hadir',
                 'is_approved' => true,
-                'latitude' => $this->user_lat,
-                'longitude' => $this->user_long,
+                'latitude' => $userLat,
+                'longitude' => $userLong,
                 'is_qr_verified' => true,
                 'verified_at' => now(),
             ]);
