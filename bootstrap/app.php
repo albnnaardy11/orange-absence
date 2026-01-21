@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'user_lat',
             'user_long',
         ]);
+        $middleware->append(\App\Http\Middleware\CheckAccountStatus::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

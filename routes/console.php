@@ -9,6 +9,7 @@ Schedule::command('app:generate-weekly-cash')->weeklyOn(2, '05:00');
 Schedule::command('app:generate-division-codes')->days([2, 4])->at('05:00');
 Schedule::command('expire:schedules')->everyMinute();
 Schedule::command('app:send-debt-reminder')->dailyAt('09:00');
+Schedule::command('app:monthly-report-alert')->lastDayOfMonth('23:59');
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());

@@ -1,15 +1,63 @@
 <x-filament-panels::page>
-    <div class="max-w-full">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+    <div class="max-w-full space-y-6" x-data="{ mode: 'qr' }">
+        
+        {{-- Mode Switcher --}}
+        <div class="flex justify-center gap-4">
+            <button @click="mode = 'qr'" wire:click="$set('mode', 'qr')"
+                :class="mode === 'qr' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700'"
+                class="px-6 py-3 rounded-lg font-bold text-lg shadow transition-all w-1/2">
+                📷 Scan QR Absen
+            </button>
+            <button @click="mode = 'manual'" wire:click="$set('mode', 'manual')"
+                :class="mode === 'manual' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'"
+                class="px-6 py-3 rounded-lg font-bold text-lg shadow transition-all w-1/2">
+                ⌨️ Input Code Manual
+            </button>
+        </div>
+
+        {{-- Scanner Section (Active only in QR Mode) --}}
+        <div x-show="mode === 'qr'" x-transition>
+            <x-filament::section>
+                <x-slot name="heading">
+                    Step 1: Scan QR Code
+                </x-slot>
+
+                <div class="flex flex-col items-center justify-center">
+                    <div id="reader" class="w-full max-w-sm rounded-lg overflow-hidden border-2 border-gray-300 dark:border-gray-700 bg-black"></div>
+                    
+                    <div id="scan-result" class="hidden mt-4 p-4 bg-green-100 text-green-800 rounded-lg w-full text-center">
+                        QR Code Scanned Successfully!
+                    </div>
+
+                    <div id="ssl-warning" class="hidden mt-4 p-2 bg-red-100 text-red-800 text-sm rounded-lg text-center">
+                        ⚠️ Camera & GPS require HTTPS. Please check your connection security.
+                    </div>
+
+                    <x-filament::button id="start-scan-btn" class="mt-4" color="warning" icon="heroicon-o-qr-code">
+                        Start Camera / Rescan
+                    </x-filament::button>
+                </div>
+            </x-filament::section>
+        </div>
+
+        {{-- Form Section --}}
         <x-filament::section>
             <x-slot name="heading">
-                Input Attendance Code
+                Step 2: Confirm & Submit
             </x-slot>
+
+            {{-- Hidden GPS Inputs --}}
+            <input type="hidden" wire:model="user_lat" id="user_lat">
+            <input type="hidden" wire:model="user_long" id="user_long">
 
             <form wire:submit="submit" class="space-y-6">
                 {{ $this->form }}
 
                 <x-filament::button type="submit" class="w-full py-4 text-lg">
-                    Check-in Now
+                    <span x-show="mode === 'qr'">Check-in (QR)</span>
+                    <span x-show="mode === 'manual'">Check-in (Manual)</span>
                 </x-filament::button>
             </form>
         </x-filament::section>
@@ -24,6 +72,7 @@
     </div>
 
     <script>
+        // GPS Logic
         window.userLat = null;
         window.userLong = null;
 
@@ -52,7 +101,10 @@
         }
 
         function updateCoords() {
-            if (!navigator.geolocation) return;
+            if (!navigator.geolocation) {
+                updateGPSUI('error');
+                return;
+            }
 
             navigator.geolocation.getCurrentPosition(
                 function(position) {
@@ -75,6 +127,11 @@
                         longInput.value = window.userLong;
                         longInput.dispatchEvent(new Event('input', { bubbles: true }));
                     }
+                    
+                    // Also dispatch window event for Alpine widgets if any
+                    window.dispatchEvent(new CustomEvent('gps-updated', { 
+                        detail: { lat: window.userLat, long: window.userLong } 
+                    }));
                 },
                 function(error) {
                     console.error('GPS Error:', error.message);
@@ -84,10 +141,55 @@
             );
         }
 
-        document.addEventListener('DOMContentLoaded', updateCoords);
-        document.addEventListener('click', () => {
-             if (!window.userLat) updateCoords();
+        document.addEventListener('DOMContentLoaded', function() {
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                document.getElementById('ssl-warning').classList.remove('hidden');
+            }
+            updateCoords();
         });
         setInterval(updateCoords, 20000);
+
+        // QR Scanner Logic
+        let html5QrcodeScanner = null;
+
+        function onScanSuccess(decodedText, decodedResult) {
+            console.log(`Scan result: ${decodedText}`, decodedResult);
+            
+            @this.set('data.qr_payload', decodedText);
+
+            document.getElementById('scan-result').classList.remove('hidden');
+            
+            if (html5QrcodeScanner) {
+                 html5QrcodeScanner.clear();
+            }
+        }
+
+        function onScanError(errorMessage) {
+            // handle error
+        }
+
+        document.getElementById('start-scan-btn').addEventListener('click', function() {
+            document.getElementById('scan-result').classList.add('hidden');
+            
+            // Clear previous payload when starting scan
+            @this.set('data.qr_payload', null);
+            
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().then(() => { startScanner(); }).catch(err => { startScanner(); });
+            } else {
+                startScanner();
+            }
+        });
+
+        function startScanner() {
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader", { fps: 10, qrbox: 250 }, /* verbose= */ false);
+            html5QrcodeScanner.render(onScanSuccess, onScanError);
+        }
+
+        // Mode Switch Handler
+        window.addEventListener('mode-changed', event => {
+            // Use wire:click instead now for mode switching to ensure server sync
+        });
     </script>
 </x-filament-panels::page>

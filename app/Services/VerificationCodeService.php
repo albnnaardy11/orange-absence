@@ -10,6 +10,43 @@ use Illuminate\Support\Facades\DB;
 
 class VerificationCodeService
 {
+    public function generate(int $divisionId)
+    {
+        // 1. Check for today's schedule
+        $day = now()->format('l');
+        $schedule = Schedule::where('division_id', $divisionId)
+            ->where('day', $day)
+            ->first();
+
+        // 2. Determine time range
+        $start = now();
+        $end = now()->addHours(2); // Default 2 hours if no schedule
+
+        if ($schedule) {
+            $start = now()->setTimeFromTimeString($schedule->start_time);
+            $end = now()->setTimeFromTimeString($schedule->end_time);
+            
+            if ($end->lessThan($start)) {
+                $end->addDay();
+            }
+        }
+
+        // 3. Create or Update code
+        return VerificationCode::updateOrCreate(
+            [
+                'division_id' => $divisionId,
+                'date' => now()->toDateString(),
+            ],
+            [
+                'schedule_id' => $schedule?->id,
+                'code' => sprintf("%06d", mt_rand(1, 999999)),
+                'start_at' => $start,
+                'expires_at' => $end,
+                'is_active' => true,
+            ]
+        );
+    }
+
     public function validate(string $code, int $divisionId, int $userId, $userLat = null, $userLong = null)
     {
         // Fallback multi-level: Form Arguments -> Laravel Cookie -> Raw PHP Cookie
@@ -82,14 +119,14 @@ class VerificationCodeService
             }
         }
 
-        // 3. Duplicate Check
+        // 3. Duplicate Check: Check if any attendance exists for this user/division today
         $exists = Attendance::where('user_id', $userId)
             ->where('division_id', $divisionId)
-            ->where('verification_code_id', $verificationCode->id)
+            ->whereDate('created_at', now()->toDateString())
             ->exists();
 
         if ($exists) {
-            throw new \Exception('Anda sudah melakukan absensi untuk sesi ini.');
+            throw new \Exception('Anda sudah melakukan absensi (Hadir/Izin/Sakit) untuk divisi ini hari ini.');
         }
 
         return [

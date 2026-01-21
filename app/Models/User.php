@@ -30,6 +30,10 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
+        if (!$this->is_active) {
+            return false;
+        }
+
         if ($panel->getId() === 'admin') {
             return $this->hasAnyRole(['super_admin', 'secretary']);
         }
@@ -50,6 +54,8 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'is_active',
+        'total_points',
         'last_login_at',
         'last_login_ip',
         'last_login_device',
@@ -70,6 +76,16 @@ class User extends Authenticatable implements FilamentUser
      *
      * @return array<string, string>
      */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'is_active' => 'boolean',
+            'total_points' => 'integer',
+        ];
+    }
+
     public function divisions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Division::class);
@@ -83,5 +99,10 @@ class User extends Authenticatable implements FilamentUser
     public function cashLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(CashLog::class);
+    }
+
+    public function pointLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PointLog::class);
     }
 }

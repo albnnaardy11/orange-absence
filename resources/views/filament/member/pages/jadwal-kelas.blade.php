@@ -76,15 +76,17 @@
     </div>
 
     @if($this->getSchedules()->isEmpty())
-        <x-filament::section class="flex flex-col items-center justify-center py-16 text-center border-dashed">
-            <div class="w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center mb-4">
-                <x-filament::icon
-                    icon="heroicon-o-calendar"
-                    class="h-8 w-8 text-gray-300 dark:text-gray-600"
-                />
+        <x-filament::section class="border-dashed py-12">
+            <div class="flex flex-col items-center justify-center text-center">
+                <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4 mx-auto shadow-inner ring-1 ring-gray-950/5 dark:ring-white/10">
+                    <x-filament::icon
+                        icon="heroicon-o-calendar"
+                        class="h-8 w-8 text-gray-400 dark:text-gray-500"
+                    />
+                </div>
+                <h3 class="text-xl font-black text-gray-950 dark:text-white tracking-tight">No Schedules</h3>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto font-medium">You are not registered in any division schedule today.</p>
             </div>
-            <h3 class="text-xl font-black text-gray-950 dark:text-white tracking-tight">No Schedules</h3>
-            <p class="mt-1 text-sm text-gray-500 max-w-xs mx-auto font-medium">You are not registered in any division schedule today.</p>
         </x-filament::section>
     @endif
 

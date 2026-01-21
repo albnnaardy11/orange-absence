@@ -3,53 +3,94 @@
 namespace App\Observers;
 
 use App\Models\Attendance;
-use App\Models\CashLog;
+use App\Models\User;
+use Filament\Notifications\Notification;
 
 class AttendanceObserver
 {
-    public function creating(Attendance $attendance): void
+    /**
+     * Handle the Attendance "created" event.
+     */
+    public function created(Attendance $attendance): void
     {
-        $attendance->ip_address = request()->ip();
-        $attendance->user_agent = request()->userAgent();
+        $user = $attendance->user;
+        if (!$user) {
+            return;
+        }
+
+        $points = 0;
+        $reason = '';
+
+        if ($attendance->status === 'alfa') {
+            $points = 10;
+            $reason = 'Absent (Alfa) on ' . $attendance->created_at->format('Y-m-d');
+        } elseif (in_array($attendance->status, ['izin', 'sakit'])) {
+            $points = 2;
+            $reason = ucfirst($attendance->status) . ' on ' . $attendance->created_at->format('Y-m-d');
+        }
+
+        if ($points > 0) {
+            $this->addPoints($user, $points, $reason);
+        }
+    }
+
+    /**
+     * Handle the Attendance "updated" event.
+     */
+    public function updated(Attendance $attendance): void
+    {
+        // Optional: Handle status changes if requirements evolve.
+        // Currently focused on new data as per instructions.
+    }
+
+    protected function addPoints(User $user, int $amount, string $reason): void
+    {
+        $user->increment('total_points', $amount);
         
-        // Auto-approve untuk status hadir
-        if ($attendance->status === 'hadir') {
-            $attendance->is_approved = true;
+        // Log points
+        $user->pointLogs()->create([
+            'amount' => $amount,
+            'reason' => $reason,
+        ]);
+
+        $this->checkThresholds($user);
+    }
+
+    protected function checkThresholds(User $user): void
+    {
+        // Reload user to get fresh points
+        $user->refresh();
+
+        if ($user->total_points >= 30 && $user->is_active) {
+            $user->update(['is_active' => false]);
+            
+            Notification::make()
+                ->title('Account Locked')
+                ->body("User {$user->name} has been locked due to excessive points ({$user->total_points}).")
+                ->danger()
+                ->sendToDatabase(\App\Models\User::role(['super_admin', 'secretary'])->get());
+
+            $this->sendExternalNotification($user, 'Account Locked');
+        } elseif ($user->total_points >= 20) {
+            Notification::make()
+                ->title('Point Warning')
+                ->body("User {$user->name} has reached {$user->total_points} points.")
+                ->warning()
+                ->sendToDatabase(\App\Models\User::role(['super_admin', 'secretary'])->get()); // Also notify user?
+                
+             // Notify the user themselves too
+             Notification::make()
+                ->title('Warning: High Points')
+                ->body("You have reached {$user->total_points} penalty points. Account will be locked at 30.")
+                ->warning()
+                ->sendToDatabase($user);
+
+            $this->sendExternalNotification($user, 'Point Warning');
         }
     }
 
-    /**
-     * Handle the Attendance "updating" event.
-     */
-    public function updating(Attendance $attendance): void
+    protected function sendExternalNotification(User $user, string $type): void
     {
-        // Auto-approve jika status diubah menjadi hadir
-        if ($attendance->isDirty('status') && $attendance->status === 'hadir') {
-            $attendance->is_approved = true;
-        }
-    }
-
-    /**
-     * Handle the Attendance "saved" event.
-     * This covers both created and updated events.
-     */
-    public function saved(Attendance $attendance): void
-    {
-        // Only proceed if status is TRUE (Verified)
-        if ($attendance->status === true) {
-            // Check if CashLog already exists to prevent duplicates ("ghost cash logs")
-            if ($attendance->cashLog()->exists()) {
-                return;
-            }
-
-            // Create CashLog
-            CashLog::create([
-                'attendance_id' => $attendance->id,
-                'user_id' => $attendance->user_id,
-                'division_id' => $attendance->division_id,
-                'amount' => 5000, // Configurable nominal, hardcoded for now or use config()
-                'status' => 'unpaid',
-            ]);
-        }
+        // Placeholder for WhatsApp/Email integration
     }
 }

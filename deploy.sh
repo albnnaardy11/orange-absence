@@ -105,7 +105,7 @@ echo -e "${GREEN}⚡ Optimizing for production...${NC}"
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-php artisan event:cache
+php artisan optimize
 php artisan filament:cache-components 2>/dev/null || true
 php artisan icons:cache 2>/dev/null || true
 

@@ -27,8 +27,14 @@ class JadwalKelas extends Page
 
     protected static ?string $title = 'Class Schedule';
 
+    protected $schedules = null;
+
     public function getSchedules()
     {
+        if ($this->schedules !== null) {
+            return $this->schedules;
+        }
+
         $user = Auth::user();
         if (!$user) return collect();
 
@@ -38,7 +44,7 @@ class JadwalKelas extends Page
         $today = now()->format('l');
         $yesterday = now()->subDay()->format('l');
 
-        return Schedule::whereIn('division_id', $divisionIds)
+        return $this->schedules = Schedule::whereIn('division_id', $divisionIds)
             ->where('status', 'active')
             ->where(function ($query) use ($today, $yesterday, $now) {
                 // 1. Scheduled for Today

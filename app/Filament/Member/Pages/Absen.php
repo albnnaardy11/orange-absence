@@ -10,19 +10,26 @@ use Filament\Forms;
 use Filament\Notifications\Notification;
 use App\Services\VerificationCodeService;
 use App\Models\Attendance;
+use App\Models\Division;
 use Illuminate\Support\Facades\Auth;
-
 use Illuminate\Support\Facades\RateLimiter;
 
 class Absen extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static bool $shouldRegisterNavigation = false;
+    protected static bool $shouldRegisterNavigation = true;
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-qr-code';
+    protected static ?string $navigationLabel = 'Scan QR Absen';
+    protected static ?string $title = 'Scan QR Absen';
+    protected static string | \UnitEnum | null $navigationGroup = 'Absensi';
+    protected static ?int $navigationSort = 1;
 
-    protected string $view = 'filament.member.pages.absen';
+    protected string $view = 'filament.member.pages.absen-qr';
 
     public ?array $data = [];
+    public $user_lat;
+    public $user_long;
 
     public function mount(): void
     {
@@ -34,81 +41,98 @@ class Absen extends Page implements HasForms
         return $schema
             ->components([
                 Forms\Components\Select::make('division_id')
-                    ->label('Division')
+                    ->label('Pilih Divisi')
                     ->options(fn () => Auth::check() ? Auth::user()->divisions()->pluck('name', 'id') : [])
                     ->required(),
-                Forms\Components\TextInput::make('code')
-                    ->label('Verification Code')
-                    ->required(),
-                Forms\Components\Hidden::make('user_lat')
-                    ->extraAttributes([
-                        'id' => 'user_lat',
-                        'x-init' => '$el.value = window.userLat; $el.dispatchEvent(new Event("input"))',
-                        'x-on:gps-updated.window' => '$el.value = $event.detail.lat; $el.dispatchEvent(new Event("input"))'
-                    ]),
-                Forms\Components\Hidden::make('user_long')
-                    ->extraAttributes([
-                        'id' => 'user_long',
-                        'x-init' => '$el.value = window.userLong; $el.dispatchEvent(new Event("input"))',
-                        'x-on:gps-updated.window' => '$el.value = $event.detail.long; $el.dispatchEvent(new Event("input"))'
-                    ]),
+                Forms\Components\Hidden::make('qr_payload'),
             ])
             ->statePath('data');
     }
 
-    public function submit(VerificationCodeService $service): void
+    public function submit(?string $manualPayload = null): void
     {
-        $throttleKey = 'absen-submit:' . Auth::id();
-        
+        $throttleKey = 'absen-qr:' . Auth::id();
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            $seconds = RateLimiter::availableIn($throttleKey);
-            Notification::make()
-                ->title('Too many attempts')
-                ->body("Please wait {$seconds} seconds before trying again.")
-                ->danger()
-                ->send();
+            Notification::make()->title('Terlalu banyak mencoba')->danger()->send();
             return;
         }
-
         RateLimiter::hit($throttleKey, 60);
 
         $data = $this->form->getState();
+        $qrPayload = $manualPayload ?? $data['qr_payload'];
 
         try {
-            $result = $service->validate(
-                $data['code'], 
-                $data['division_id'], 
-                Auth::id(),
-                $data['user_lat'] ?? null,
-                $data['user_long'] ?? null
-            );
-
-            $attendance = Attendance::create([
-                'user_id' => Auth::id(),
-                'division_id' => $data['division_id'],
-                'verification_code_id' => $result['verification_code_id'],
-                'schedule_id' => $result['schedule_id'] ?? null,
-                'status' => 'hadir',
-                'is_approved' => true, // Auto-approve untuk status hadir
-                'latitude' => $data['user_lat'] ?? null,
-                'longitude' => $data['user_long'] ?? null,
-            ]);
-
-            // Automatically link to the latest unpaid cash log if exists
-            $cashLog = \App\Models\CashLog::where('user_id', Auth::id())
-                ->where('status', 'unpaid')
-                ->latest()
-                ->first();
-
-            if ($cashLog) {
-                $cashLog->update(['attendance_id' => $attendance->id]);
+            if (empty($qrPayload)) {
+                throw new \Exception("Silakan scan QR Code terlebih dahulu.");
             }
 
-            Notification::make()->title('Attendance verified!')->success()->send();
-            $this->form->fill(); 
+            // Decrypt QR
+            try {
+                $payload = \Illuminate\Support\Facades\Crypt::decrypt($qrPayload);
+            } catch (\Exception $e) {
+                throw new \Exception("QR Code tidak valid.");
+            }
+
+            // Validation basics
+            if (!isset($payload['division_id']) || !isset($payload['timestamp'])) {
+                throw new \Exception("Payload QR tidak lengkap.");
+            }
+
+            // Auto-detect division if not selected
+            $divisionId = $data['division_id'] ?? $payload['division_id'];
+
+            if ($payload['division_id'] != $divisionId) {
+                throw new \Exception("QR Code ini untuk divisi lain.");
+            }
+
+            // Expiry check (60 seconds)
+            if (abs(now()->timestamp - $payload['timestamp']) > 60) {
+                throw new \Exception("QR Code sudah kadaluwarsa, silakan minta Admin refresh QR.");
+            }
+
+            // Geofencing
+            $division = Division::find($divisionId);
+            if ($division && $division->latitude && $division->longitude && $this->user_lat && $this->user_long) {
+                if ($this->calculateDistance($this->user_lat, $this->user_long, $division->latitude, $division->longitude) > 100) {
+                    throw new \Exception("Anda di luar jangkauan (>100m).");
+                }
+            }
+
+            // Check if already attended today for this division/session
+            $alreadyAttended = Attendance::where('user_id', Auth::id())
+                ->where('division_id', $divisionId)
+                ->whereDate('created_at', now()->toDateString())
+                ->exists();
+
+            if ($alreadyAttended) {
+                throw new \Exception("Anda sudah melakukan absensi untuk divisi ini hari ini.");
+            }
+
+            // Create Attendance
+            Attendance::create([
+                'user_id' => Auth::id(),
+                'division_id' => $divisionId,
+                'status' => 'hadir',
+                'is_approved' => true,
+                'latitude' => $this->user_lat,
+                'longitude' => $this->user_long,
+                'is_qr_verified' => true,
+            ]);
+
+            Notification::make()->title('Absensi QR Berhasil!')->body('Anda sudah absen!')->success()->send();
+            $this->form->fill();
 
         } catch (\Exception $e) {
             Notification::make()->title($e->getMessage())->danger()->send();
         }
+    }
+
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $theta = $lon1 - $lon2;
+        $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
+        $dist = acos($dist);
+        $dist = rad2deg($dist);
+        return round($dist * 60 * 1.1515 * 1.609344 * 1000);
     }
 }

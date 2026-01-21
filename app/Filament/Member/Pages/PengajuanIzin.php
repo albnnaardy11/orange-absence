@@ -71,6 +71,21 @@ class PengajuanIzin extends Page implements HasForms
     public function create(): void
     {
         $data = $this->form->getState();
+
+        // Check if user has already made any attendance record today for this division
+        $alreadyAttended = Attendance::where('user_id', Auth::id())
+            ->where('division_id', $data['division_id'])
+            ->whereDate('created_at', now()->toDateString())
+            ->exists();
+
+        if ($alreadyAttended) {
+            Notification::make()
+                ->title('Gagal Mengajukan')
+                ->body('Anda tidak bisa mengajukan izin/sakit karena Anda sudah memiliki catatan absensi (Hadir/Izin/Sakit) hari ini.')
+                ->danger()
+                ->send();
+            return;
+        }
         
         // Find current schedule for the division
         $today = now()->format('l');

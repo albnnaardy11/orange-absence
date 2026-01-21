@@ -73,6 +73,7 @@ class MemberPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->sidebarCollapsibleOnDesktop(false) // or ->sidebar(false) if supported, but topNavigation disables sidebar usually
-            ->breadcrumbs(false);
+            ->breadcrumbs(false)
+            ->spa();
     }
 }

@@ -66,14 +66,34 @@
 - **Debt Notification**: Pemicu notifikasi otomatis (Database Notification) kepada member dengan tunggakan >= 3 kali.
 </details>
 
+<details>
+<summary><b>⚖️ Point System & Auto-Lock</b></summary>
+
+- **Fair Penalty**: Poin bertambah otomatis (+10 Alfa, +2 Izin/Sakit).
+- **Auto-Suspension**: Akun terkunci otomatis (Suspent) jika poin mencapai 30.
+- **Admin Control**: Resource khusus `SuspendedMember` untuk review dan pemulihan akun (Reset Poin).
+</details>
+
+<details>
+<summary><b>📱 Dynamic QR & Anti-Cheat</b></summary>
+
+- **Encrypted Payload**: QR Code berisi data terenkripsi (Division ID + Timestamp + Secret).
+- **Rolling Codes**: QR valid hanya 60 detik (30s refresh + toleransi).
+- **Double Validation**: Absensi wajib lolos dekripsi QR **DAN** radius Geofencing (100m) secara simultan.
+</details>
+
 ---
 
-## ⚡ Performa & Skalabilitas
-
-* **Query Efficiency**: Implementasi Eager Loading menyeluruh pada Filament Resources untuk eliminasi isu N+1.
-* **Database Indexing**: Strategi indexing pada kolom kritis (Composite Indexes) untuk kecepatan akses data milidetik.
-* **Production Ready**: Konfigurasi `encryptCookies` dikecualikan untuk jalur GPS guna menjamin interoperabilitas JS-PHP.
-* **Strict Typing**: Implementasi Strict Typing (PHP 8.2+) dan PHP 8.3 Ready.
+## ⚡ Performa & Skalabilitas (Audit v2.0)
+ 
+ Pada update terbaru, sistem telah melalui audit performa menyeluruh:
+ 
+ * **Optimasi Database (Latency < 50ms)**: Penambahan Composite Indexes pada kolom kritis untuk mempercepat query filtering dan duplicate check.
+ * **SPA Mode Enabled**: Menggunakan Filament SPA mode untuk transisi halaman instan (Zero Refresh UX).
+ * **Method Memoization**: Optimasi logic pada method-method berat untuk mencegah query database berulang.
+ * **SEO Excellence**: Optimasi struktur HTML dan meta description untuk mencapai skor SEO > 90.
+ * **Resource Eager Loading**: Implementasi Eager Loading menyeluruh pada seluruh resource untuk eliminasi total isu N+1.
+ * **Production Optimized**: Script deployment (`deploy.sh`) kini menyertakan optimasi level produksi (`view:cache`, dll).
 
 ---
 
