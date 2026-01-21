@@ -27,14 +27,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-        }
+            padding: 
 
         .glass {
             background: rgba(255, 255, 255, 0.02);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 32px;
+            border-radius: 24px;
             transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
             cursor: pointer;
             text-decoration: none;
@@ -43,11 +43,23 @@
             flex-direction: column;
         }
 
+        @media (min-width: 768px) {
+            .glass {
+                border-radius: 32px;
+            }
+        }
+
         .glass:hover {
             background: rgba(255, 255, 255, 0.05);
             border-color: rgba(251, 146, 60, 0.2);
             transform: translateY(-8px) scale(1.01);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        @media (max-width: 767px) {
+            .glass:active {
+                transform: scale(0.98);
+            }
         }
 
         .orange-gradient-text {
@@ -85,13 +97,25 @@
 
         .btn-portal-action {
             background: linear-gradient(135deg, #fb923c, #f97316);
-            padding: 12px;
+            padding: 14px 16px;
             border-radius: 16px;
             text-align: center;
             font-weight: 600;
             margin-top: auto;
             transition: all 0.3s ease;
             color: white;
+            font-size: 0.95rem;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (min-width: 768px) {
+            .btn-portal-action {
+                padding: 12px;
+                font-size: 1rem;
+            }
         }
 
         .glass:hover .btn-portal-action {
@@ -104,11 +128,18 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 600px;
-            height: 600px;
+            width: 300px;
+            height: 300px;
             background: radial-gradient(circle, rgba(249, 115, 22, 0.1) 0%, transparent 70%);
             z-index: -1;
             pointer-events: none;
+        }
+
+        @media (min-width: 768px) {
+            .hero-glow {
+                width: 600px;
+                height: 600px;
+            }
         }
     </style>
 </head>
@@ -117,57 +148,57 @@
 
     <div class="max-w-6xl mx-auto w-full">
         <!-- Header -->
-        <header class="text-center mb-20">
-            <h1 class="text-7xl font-extrabold mb-6 tracking-tight">
+        <header class="text-center mb-10 md:mb-16 lg:mb-20">
+            <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-4 md:mb-6 tracking-tight">
                 <span class="orange-gradient-text">ABSEN ORANGE</span>
             </h1>
-            <p class="text-gray-400 text-xl font-light max-w-2xl mx-auto">
+            <p class="text-gray-400 text-base sm:text-lg md:text-xl font-light max-w-2xl mx-auto px-4">
                 Portal Akses Sistem Absensi & Kas Orange. 
                 Pilih peran Anda untuk masuk ke sistem.
             </p>
         </header>
 
         <!-- Main Content -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 lg:gap-10">
             
             <!-- Administrator Section -->
-            <a href="/admin/login" class="glass p-10 login-card">
-                <div class="mb-8">
-                    <div class="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-4">
-                        <svg class="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <a href="/admin/login" class="glass p-6 md:p-8 lg:p-10 login-card">
+                <div class="mb-6 md:mb-8">
+                    <div class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-3 md:mb-4">
+                        <svg class="w-7 h-7 md:w-8 md:h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04M12 2.944V21m0-18.056L3 9m9-6.056l9 6.056"></path>
                         </svg>
                     </div>
-                    <h2 class="text-3xl font-bold">Administrator</h2>
-                    <p class="text-gray-500 mt-2 text-sm leading-relaxed">Kelola seluruh sistem, data divisi, laporan, dan infrastruktur.</p>
+                    <h2 class="text-2xl md:text-3xl font-bold">Administrator</h2>
+                    <p class="text-gray-500 mt-2 text-sm md:text-base leading-relaxed">Kelola seluruh sistem, data divisi, laporan, dan infrastruktur.</p>
                 </div>
                 <div class="btn-portal-action">Masuk sebagai Admin</div>
             </a>
 
             <!-- Secretary Section -->
-            <a href="/secretary" class="glass p-10 login-card">
-                <div class="mb-8">
-                    <div class="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-4">
-                        <svg class="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <a href="/secretary" class="glass p-6 md:p-8 lg:p-10 login-card">
+                <div class="mb-6 md:mb-8">
+                    <div class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-3 md:mb-4">
+                        <svg class="w-7 h-7 md:w-8 md:h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 01-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                         </svg>
                     </div>
-                    <h2 class="text-3xl font-bold">Secretary</h2>
-                    <p class="text-gray-500 mt-2 text-sm leading-relaxed">Kelola operasional divisi, buku kas, dan verifikasi absensi harian.</p>
+                    <h2 class="text-2xl md:text-3xl font-bold">Secretary</h2>
+                    <p class="text-gray-500 mt-2 text-sm md:text-base leading-relaxed">Kelola operasional divisi, buku kas, dan verifikasi absensi harian.</p>
                 </div>
                 <div class="btn-portal-action">Masuk sebagai Sekretaris</div>
             </a>
 
             <!-- Member Section -->
-            <a href="/member/login" class="glass p-10 login-card">
-                <div class="mb-8">
-                    <div class="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-4">
-                        <svg class="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <a href="/member/login" class="glass p-6 md:p-8 lg:p-10 login-card">
+                <div class="mb-6 md:mb-8">
+                    <div class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-3 md:mb-4">
+                        <svg class="w-7 h-7 md:w-8 md:h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
                     </div>
-                    <h2 class="text-3xl font-bold">Member</h2>
-                    <p class="text-gray-500 mt-2 text-sm leading-relaxed">Presensi harian, pantau statistik kehadiran harian, dan jadwal kegiatan.</p>
+                    <h2 class="text-2xl md:text-3xl font-bold">Member</h2>
+                    <p class="text-gray-500 mt-2 text-sm md:text-base leading-relaxed">Presensi harian, pantau statistik kehadiran harian, dan jadwal kegiatan.</p>
                 </div>
                 <div class="btn-portal-action">Masuk sebagai Member</div>
             </a>
@@ -175,12 +206,12 @@
         </div>
 
         <!-- Footer -->
-        <footer class="mt-24 text-center">
+        <footer class="mt-12 md:mt-16 lg:mt-24 text-center">
             <div class="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-white/5 border border-white/5 text-xs text-gray-500">
                 <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                 <span>Status: Online</span>
             </div>
-            <p class="text-gray-600 text-sm mt-6 font-light opacity-50">&copy; {{ date('Y') }} Orange Absence. All rights reserved.</p>
+            <p class="text-gray-600 text-xs md:text-sm mt-4 md:mt-6 font-light opacity-50 px-4">&copy; {{ date('Y') }} Orange Absence. All rights reserved.</p>
         </footer>
     </div>
 </body>

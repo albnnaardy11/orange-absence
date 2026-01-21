@@ -4,15 +4,15 @@
     <div class="max-w-full space-y-6" x-data="{ mode: 'qr' }">
         
         {{-- Mode Switcher --}}
-        <div class="flex justify-center gap-4">
+        <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
             <button @click="mode = 'qr'" wire:click="$set('mode', 'qr')"
-                :class="mode === 'qr' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700'"
-                class="px-6 py-3 rounded-lg font-bold text-lg shadow transition-all w-1/2">
+                :class="mode === 'qr' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'"
+                class="px-4 sm:px-6 py-3 rounded-lg font-bold text-base sm:text-lg shadow transition-all w-full sm:w-1/2 min-h-[48px]">
                 📷 Scan QR Absen
             </button>
             <button @click="mode = 'manual'" wire:click="$set('mode', 'manual')"
-                :class="mode === 'manual' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'"
-                class="px-6 py-3 rounded-lg font-bold text-lg shadow transition-all w-1/2">
+                :class="mode === 'manual' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'"
+                class="px-4 sm:px-6 py-3 rounded-lg font-bold text-base sm:text-lg shadow transition-all w-full sm:w-1/2 min-h-[48px]">
                 ⌨️ Input Code Manual
             </button>
         </div>
@@ -24,18 +24,18 @@
                     Step 1: Scan QR Code
                 </x-slot>
 
-                <div class="flex flex-col items-center justify-center">
-                    <div id="reader" class="w-full max-w-sm rounded-lg overflow-hidden border-2 border-gray-300 dark:border-gray-700 bg-black"></div>
+                <div class="flex flex-col items-center justify-center px-2 sm:px-0">
+                    <div id="reader" class="w-full max-w-xs sm:max-w-sm rounded-lg overflow-hidden border-2 border-gray-300 dark:border-gray-700 bg-black"></div>
                     
-                    <div id="scan-result" class="hidden mt-4 p-4 bg-green-100 text-green-800 rounded-lg w-full text-center">
+                    <div id="scan-result" class="hidden mt-4 p-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-lg w-full max-w-xs sm:max-w-sm text-center">
                         QR Code Scanned Successfully!
                     </div>
 
-                    <div id="ssl-warning" class="hidden mt-4 p-2 bg-red-100 text-red-800 text-sm rounded-lg text-center">
+                    <div id="ssl-warning" class="hidden mt-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 text-xs sm:text-sm rounded-lg text-center max-w-xs sm:max-w-sm">
                         ⚠️ Camera & GPS require HTTPS. Please check your connection security.
                     </div>
 
-                    <x-filament::button id="start-scan-btn" class="mt-4" color="warning" icon="heroicon-o-qr-code">
+                    <x-filament::button id="start-scan-btn" class="mt-4 w-full max-w-xs sm:max-w-sm" color="warning" icon="heroicon-o-qr-code">
                         Start Camera / Rescan
                     </x-filament::button>
                 </div>
@@ -55,7 +55,7 @@
             <form wire:submit="submit" class="space-y-6">
                 {{ $this->form }}
 
-                <x-filament::button type="submit" class="w-full py-4 text-lg">
+                <x-filament::button type="submit" class="w-full py-3 sm:py-4 text-base sm:text-lg min-h-[48px]">
                     <span x-show="mode === 'qr'">Check-in (QR)</span>
                     <span x-show="mode === 'manual'">Check-in (Manual)</span>
                 </x-filament::button>
@@ -66,7 +66,7 @@
     <x-filament-actions::modals />
 
     {{-- GPS Status Indicator --}}
-    <div id="gps-status" class="fixed top-18 right-4 z-50 flex items-center gap-x-2 px-3 py-1.5 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-500 opacity-0 translate-y-[-20px]">
+    <div id="gps-status" class="fixed top-16 sm:top-18 right-2 sm:right-4 z-50 flex items-center gap-x-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-500 opacity-0 translate-y-[-20px]">
         <div class="h-2 w-2 rounded-full bg-red-500 animate-pulse" id="gps-dot"></div>
         <span class="text-xs font-bold text-gray-600 dark:text-gray-300" id="gps-text">Mencari GPS...</span>
     </div>

@@ -23,6 +23,7 @@
 | Fitur Utama | Deskripsi Standar Unicorp |
 | :--- | :--- |
 | 🛡️ **Advanced RBAC** | Permission management yang dioptimalkan dengan caching layer untuk performa tinggi. |
+| 📱 **Fully Responsive** | Optimasi penuh untuk semua device (Mobile, Tablet, Desktop) dengan touch-friendly interface. |
 | 📍 **GPS Cookie Sync** | Sinkronisasi GPS berlapis (Form + Cookies) untuk menjamin akurasi data check-in di berbagai browser. |
 | 🌍 **Jakarta Orientation** | Teroptimasi untuk penggunaan di wilayah Jakarta (WIB) dengan koordinat default Jakarta Timur. |
 | 🔔 **Debt Reminder** | Notifikasi push otomatis untuk penunggak kas (Smart Alert System). |
