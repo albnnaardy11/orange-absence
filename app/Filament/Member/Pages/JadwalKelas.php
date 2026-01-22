@@ -77,7 +77,7 @@ class JadwalKelas extends Page
     public function absenAction(): Action
     {
         return Action::make('absen')
-            ->label('Check-in Now')
+            ->label('Masukan Kode')
             ->color('primary')
             ->button()
             ->extraAttributes([
@@ -85,8 +85,10 @@ class JadwalKelas extends Page
             ])
             ->form([
                 TextInput::make('code')
-                    ->label('Attendance Code')
-                    ->required(),
+                    ->label('Kode Verifikasi')
+                    ->placeholder('Contoh: 123456')
+                    ->required()
+                    ->numeric(),
                 Forms\Components\Hidden::make('user_lat')
                     ->extraAttributes([
                         'id' => 'user_lat',
@@ -106,8 +108,8 @@ class JadwalKelas extends Page
                 if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
                     $seconds = RateLimiter::availableIn($throttleKey);
                     Notification::make()
-                        ->title('Too many attempts')
-                        ->body("Please wait {$seconds} seconds.")
+                        ->title('Terlalu banyak percobaan')
+                        ->body("Tunggu {$seconds} detik lagi.")
                         ->danger()
                         ->send();
                     return;
@@ -119,7 +121,7 @@ class JadwalKelas extends Page
                 $schedule = Schedule::find($scheduleId);
 
                 if (!$schedule) {
-                    Notification::make()->title('Schedule not found')->danger()->send();
+                    Notification::make()->title('Jadwal tidak ditemukan')->danger()->send();
                     return;
                 }
 
@@ -138,6 +140,7 @@ class JadwalKelas extends Page
                         'verification_code_id' => $result['verification_code_id'],
                         'schedule_id' => $schedule->id,
                         'status' => 'hadir',
+                        'is_approved' => true, // Auto Approve for Verified Code
                         'latitude' => $data['user_lat'] ?? null,
                         'longitude' => $data['user_long'] ?? null,
                     ]);
@@ -152,7 +155,11 @@ class JadwalKelas extends Page
                         $cashLog->update(['attendance_id' => $attendance->id]);
                     }
 
-                    Notification::make()->title('Attendance successful!')->success()->send();
+                    Notification::make()
+                        ->title('Absensi Berhasil!')
+                        ->body("Absen kode tercatat di {$schedule->division->name}")
+                        ->success()
+                        ->send();
 
                 } catch (\Exception $e) {
                     Notification::make()->title($e->getMessage())->danger()->send();

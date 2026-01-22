@@ -35,6 +35,24 @@ class Absen extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill();
+
+        // 1. Interactive Greeting (Check if user already attended today)
+        if (Auth::check()) {
+            $user = Auth::user();
+            $attendedToday = Attendance::where('user_id', $user->id)
+                ->whereDate('created_at', now()->today())
+                ->exists();
+
+            if ($attendedToday) {
+                Notification::make()
+                    ->title("Hi, {$user->name}!")
+                    ->body("Kamu sudah melakukan absensi hari ini. Terima kasih!")
+                    ->color('info')
+                    ->icon('heroicon-o-check-badge')
+                    ->seconds(5)
+                    ->send();
+            }
+        }
     }
 
     public function form(Schema $schema): Schema
@@ -44,7 +62,8 @@ class Absen extends Page implements HasForms
                 Forms\Components\Select::make('division_id')
                     ->label('Pilih Divisi')
                     ->options(fn () => Auth::check() ? Auth::user()->divisions()->pluck('name', 'id') : [])
-                    ->required(),
+                    ->required()
+                    ->native(false), // Better UI
                 Forms\Components\Hidden::make('qr_payload'),
             ])
             ->statePath('data');
@@ -121,7 +140,7 @@ class Absen extends Page implements HasForms
                 ->exists();
 
             if ($alreadyAttended) {
-                 throw new \Exception("Anda sudah melakukan absensi hari ini!");
+                 throw new \Exception("Oops! Anda sudah absen hari ini (via QR/Kode). Tidak perlu absen double ya!");
             }
 
             // 8. Find Schedule
@@ -146,13 +165,33 @@ class Absen extends Page implements HasForms
 
             \Illuminate\Support\Facades\Log::info("QR_SUCCESS: User {$userId} Attendance ID: {$attendance->id}");
 
-            // 10. Success UI
+            // 10. Success UI & Dynamic Greeting
             $classroom = $activeSchedule ? $activeSchedule->classroom : $division->name;
+            
+            // Time-based Greeting
+            $hour = now()->hour;
+            $timeGreeting = match(true) {
+                $hour < 11 => "Selamat Pagi!",
+                $hour < 15 => "Selamat Siang!",
+                $hour < 18 => "Selamat Sore!",
+                default => "Selamat Malam!",
+            };
+
+            // Random Motivational Quote
+            $quotes = [
+                "Semangat belajarnya hari ini!",
+                "Jangan lupa berdoa sebelum mulai ya!",
+                "Keep up the good work!",
+                "Masa depan cerah dimulai hari ini!",
+                "Selalu jaga kesehatan ya!"
+            ];
+            $randomQuote = $quotes[array_rand($quotes)];
+
             Notification::make()
-                ->title('Berhasil!')
-                ->body("Absen tercatat di {$classroom}")
+                ->title("{$timeGreeting} Absen Berhasil!")
+                ->body("{$randomQuote}\n Tercatat di: {$classroom}")
                 ->success()
-                ->persistent()
+                ->persistent() // Keeps it visible until closed/next action
                 ->send();
             
             $this->dispatch('attendance-success'); 

@@ -56,13 +56,14 @@ if [ "$FIRST_SETUP" = false ]; then
     php artisan down --retry=60 || true
 fi
 
-# 4. Update Dependencies
-echo -e "${GREEN}📦 Installing Composer dependencies...${NC}"
+# 4. Update Dependencies (Force Update for Version Fix)
+echo -e "${GREEN}📦 Updating Composer dependencies...${NC}"
 if command -v composer &> /dev/null; then
-    composer install --no-dev --optimize-autoloader --no-interaction
+    # We use update instead of install to ensure lock file syncs with new json
+    composer update --no-dev --optimize-autoloader --no-interaction
 else
     echo -e "${YELLOW}⚠️  Using php composer.phar...${NC}"
-    php composer.phar install --no-dev --optimize-autoloader --no-interaction
+    php composer.phar update --no-dev --optimize-autoloader --no-interaction
 fi
 
 # 5. Generate App Key (First Time Only)
@@ -100,12 +101,17 @@ chmod -R 755 storage bootstrap/cache
 find storage -type f -exec chmod 644 {} \;
 find storage -type d -exec chmod 755 {} \;
 
-# 10. Production Optimization
+# 10. Production Optimization & Recovery
 echo -e "${GREEN}⚡ Optimizing for production...${NC}"
+# Clear everything first to fix "ComponentNotFound" errors
+php artisan filament:optimize-clear
+php artisan optimize:clear
+php artisan view:clear
+
+# Re-cache specific components safely
 php artisan config:cache
 php artisan route:cache
-php artisan view:cache
-php artisan optimize
+php artisan livewire:discover # Critical for registering Livewire components
 php artisan filament:cache-components 2>/dev/null || true
 php artisan icons:cache 2>/dev/null || true
 
@@ -114,8 +120,8 @@ echo -e "${GREEN}📋 Ensuring queue table exists...${NC}"
 php artisan queue:table 2>/dev/null || true
 php artisan migrate --force
 
-# 12. Clear Application Cache
-echo -e "${GREEN}🧹 Clearing application cache...${NC}"
+# 12. Clear Application Cache (Final Sweep)
+echo -e "${GREEN}🧹 Final cache sweep...${NC}"
 php artisan cache:clear
 
 # 13. Test Database Connection

@@ -76,11 +76,13 @@
 </details>
 
 <details>
-<summary><b>📱 Dynamic QR & Anti-Cheat</b></summary>
+<summary><b>📱 Dynamic QR, Anti-Cheat & Smart Notifications [NEW]</b></summary>
 
 - **Encrypted Payload**: QR Code berisi data terenkripsi (Division ID + Timestamp + Secret).
 - **Rolling Codes**: QR valid hanya 60 detik (30s refresh + toleransi).
-- **Double Validation**: Absensi wajib lolos dekripsi QR **DAN** radius Geofencing (100m) secara simultan.
+- **Double Validation**: Absensi wajib lolos dekripsi QR **DAN** radius Geofencing (10 meter) secara simultan.
+- **Anti-Double Protection**: Sistem "Smart Lock" mencegah user absen dua kali di hari yang sama, baik via QR maupun Kode Manual.
+- **Interactive UI**: Sapaan dinamis (Pagi/Siang/Sore), Kuotasi Motivasi acak, dan Toast Alert yang interaktif.
 </details>
 
 ---

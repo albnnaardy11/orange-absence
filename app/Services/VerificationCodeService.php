@@ -126,7 +126,7 @@ class VerificationCodeService
             ->exists();
 
         if ($exists) {
-            throw new \Exception('Anda sudah melakukan absensi (Hadir/Izin/Sakit) untuk divisi ini hari ini.');
+            throw new \Exception('Oops! Anda sudah absen hari ini (via QR/Kode). Tidak perlu absen double ya! ');
         }
 
         return [
