@@ -55,97 +55,89 @@ class Absen extends Page implements HasForms
     public function saveAttendance(?string $payloadStr = null, $lat = null, $long = null): void
     {
         $userId = Auth::id();
-        // Use arguments if provided, otherwise fallback to component properties
+        
+        // 1. Data Gathering
         $qrPayload = $payloadStr ?? $this->qr_payload;
         $userLat = $lat ?? $this->user_lat;
         $userLong = $long ?? $this->user_long;
 
-        \Illuminate\Support\Facades\Log::info("User {$userId} triggering saveAttendance. Payload Len: " . strlen($qrPayload));
-
-        $throttleKey = 'absen-qr:' . $userId;
-        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            \Illuminate\Support\Facades\Log::warning("User {$userId} QR Scan rate limited.");
-            Notification::make()->title('Terlalu banyak mencoba')->danger()->send();
-            return;
-        }
-        RateLimiter::hit($throttleKey, 60);
+        // Logging
+        \Illuminate\Support\Facades\Log::info("QR_SCAN_ATTEMPT: User: {$userId}", [
+            'payload_present' => !empty($qrPayload),
+            'lat' => $userLat,
+            'long' => $userLong
+        ]);
 
         try {
+            // 2. Initial Validation
             if (empty($qrPayload)) {
-                throw new \Exception("Payload QR kosong.");
+                throw new \Exception("Tidak ada data QR yang terbaca.");
             }
 
-            // Sync User Location from Arguments or State
-            // Note: We don't need to persist these to public properties if we use them locally, 
-            // but for UI consistency if we want to show 'last location' we could.
-            // For now, local use is faster.
-
-            // Decrypt QR
+            // 3. Decryption
             try {
                 $payload = \Illuminate\Support\Facades\Crypt::decrypt($qrPayload);
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("User {$userId} Invalid QR: " . $e->getMessage());
-                throw new \Exception("QR Code tidak valid atau rusak.");
+                \Illuminate\Support\Facades\Log::error("QR_DECRYPT_FAIL: User {$userId} - " . $e->getMessage());
+                throw new \Exception("QR Code tidak valid! Pastikan Anda scan QR resmi dari portal.");
             }
 
-            // Validation basics
-            if (!isset($payload['division_id']) || !isset($payload['timestamp'])) {
-                throw new \Exception("Format QR tidak dikenali.");
+            if (!is_array($payload) || !isset($payload['division_id']) || !isset($payload['timestamp'])) {
+                throw new \Exception("Format QR rusak atau tidak dikenali.");
             }
 
-            $divisionId = $payload['division_id'];
-
-            // Expiry check (180 seconds for stability)
-            if (abs(now()->timestamp - $payload['timestamp']) > 180) {
-                 throw new \Exception("QR Code sudah kadaluwarsa (3 menit). Silakan minta Admin refresh QR.");
+            // 4. Timestamp Check (Relaxed to 5 minutes to account for slow connections/devices)
+            $secondsDiff = abs(now()->timestamp - $payload['timestamp']);
+            if ($secondsDiff > 300) { 
+                 throw new \Exception("QR Code kadaluwarsa. Silakan refresh layar Admin.");
             }
 
-            // Check distance
-            $division = Division::find($divisionId);
+            // 5. Division Validation
+            $division = Division::find($payload['division_id']);
             if (!$division) {
-                 throw new \Exception("Divisi tidak ditemukan.");
+                 throw new \Exception("Divisi dalam QR tidak ditemukan di sistem.");
             }
 
-            // Geofencing Check
+            // 6. Geofencing (If Enforced)
             if ($division->latitude && $division->longitude) {
                 if (!$userLat || !$userLong) {
-                     throw new \Exception("Lokasi GPS Anda belum terdeteksi. Pastikan GPS aktif.");
+                     // If device didn't send GPS, we suspect browser permission issue
+                     throw new \Exception("Lokasi tidak terdeteksi. Izinkan akses GPS di browser Anda.");
                 }
 
                 $distance = $this->calculateDistance($userLat, $userLong, $division->latitude, $division->longitude);
-                // standard mobile GPS can be off, 200m is safer
-                if ($distance > 200) {
-                    \Illuminate\Support\Facades\Log::warning("User {$userId} Geofence fail. Dist: {$distance}m");
-                    throw new \Exception("Luar jangkauan ($distance meter). Maksimal 200m.");
+                
+                // Allow up to 300m for "GPS drift" or improved UX
+                if ($distance > 300) { 
+                    \Illuminate\Support\Facades\Log::warning("GEOFENCE_FAIL: User {$userId} is {$distance}m away.");
+                    throw new \Exception("Anda terlalu jauh ({$distance} meter) dari lokasi absen.");
                 }
             }
 
-            // Check duplicate
-            $alreadyAttended = Attendance::where('user_id', Auth::id())
-                ->where('division_id', $divisionId)
-                ->whereDate('created_at', now()->toDateString())
+            // 7. Duplicate Check
+            $exists = Attendance::where('user_id', $userId)
+                ->where('division_id', $division->id)
+                ->whereDate('created_at', now()->today())
                 ->exists();
 
-            if ($alreadyAttended) {
+            if ($exists) {
+                 // Send success event anyway so UI stops loading, but show warning
                  $this->dispatch('attendance-success'); 
-                 $this->qr_payload = null;
-                 Notification::make()->title('Info')->body('Anda sudah absen hari ini.')->warning()->send();
+                 Notification::make()->title('Sudah Absen')->body('Anda sudah absen hari ini.')->warning()->send();
                  return;
             }
 
-            // Try to Link to active Schedule for history details
-            $nowTime = now()->format('H:i:s');
-            $currentDay = now()->format('l');
-            $activeSchedule = Schedule::where('division_id', $divisionId)
-                ->where('day', $currentDay)
-                ->where('start_time', '<=', $nowTime)
-                ->where('end_time', '>=', $nowTime)
+            // 8. Find Schedule
+            $activeSchedule = Schedule::where('division_id', $division->id)
+                ->where('day', now()->format('l'))
+                ->whereTime('start_time', '<=', now())
+                ->whereTime('end_time', '>=', now())
                 ->first();
 
-            // Create Attendance
+            // 9. Create Record
             $attendance = Attendance::create([
-                'user_id' => Auth::id(),
-                'division_id' => $divisionId,
+                'user_id' => $userId,
+                'division_id' => $division->id,
                 'schedule_id' => $activeSchedule?->id,
                 'status' => 'hadir',
                 'is_approved' => true,
@@ -155,22 +147,24 @@ class Absen extends Page implements HasForms
                 'verified_at' => now(),
             ]);
 
-            \Illuminate\Support\Facades\Log::info("User {$userId} success QR attendance ID: " . $attendance->id);
+            \Illuminate\Support\Facades\Log::info("QR_SUCCESS: User {$userId} Attendance ID: {$attendance->id}");
 
+            // 10. Success UI
+            $classroom = $activeSchedule ? $activeSchedule->classroom : $division->name;
             Notification::make()
-                ->title('Berhasil Absen!')
-                ->body('Absensi Anda telah tercatat' . ($activeSchedule ? " di {$activeSchedule->classroom}." : "."))
+                ->title('Berhasil!')
+                ->body("Absen tercatat di {$classroom}")
                 ->success()
+                ->persistent()
                 ->send();
             
             $this->dispatch('attendance-success'); 
-            $this->qr_payload = null;
             $this->form->fill(); 
 
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("User {$userId} QR Error: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("QR_PROCESS_ERROR: User {$userId}: " . $e->getMessage());
             $this->dispatch('attendance-failure', error: $e->getMessage());
-            Notification::make()->title('Gagal Absen')->body($e->getMessage())->danger()->send();
+            Notification::make()->title('Gagal')->body($e->getMessage())->danger()->send();
         }
     }
 
