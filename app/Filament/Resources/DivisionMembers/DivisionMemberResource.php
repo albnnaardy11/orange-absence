@@ -17,11 +17,11 @@ class DivisionMemberResource extends Resource
 
     protected static ?string $label = 'Division Member';
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
     protected static ?string $navigationLabel = 'Division Members';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'User Management';
+    protected static ?string $navigationGroup = 'User Management';
 
     public static function getEloquentQuery(): Builder
     {

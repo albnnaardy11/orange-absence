@@ -21,10 +21,10 @@ class SuspendedMemberResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-lock-closed';
+    protected static ?string $navigationIcon = 'heroicon-o-lock-closed';
     protected static ?string $navigationLabel = 'Suspended Members';
     protected static ?string $modelLabel = 'Suspended Member';
-    protected static string | \UnitEnum | null $navigationGroup = 'User Management';
+    protected static ?string $navigationGroup = 'User Management';
 
     public static function getEloquentQuery(): Builder
     {
