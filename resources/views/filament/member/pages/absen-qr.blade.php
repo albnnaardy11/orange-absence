@@ -234,7 +234,7 @@
         overlay.classList.add('flex');
 
         try {
-            // Stop camera immediately to save resources/prevent double scan
+            // Stop camera immediately
             if (html5QrCode) {
                 await html5QrCode.pause();
             }
@@ -243,13 +243,24 @@
                throw new Error("GPS Belum Terkunci! Tunggu indikator GPS hijau.");
             }
 
+            // DYNAMIC COMPONENT LOOKUP (Fix for 'call' undefined error)
+            // We find the component instance at the exact moment of execution
+            const componentId = '{{ $this->getId() }}';
+            const component = Livewire.find(componentId);
+            
+            if (!component) {
+                // Determine if we are in a stale state or just lost connection
+                console.error("Livewire component not found: " + componentId);
+                throw new Error("Koneksi terputus. Mohon refresh halaman.");
+            }
+
             // Send to Server
-            await @this.call('saveAttendance', decodedText, window.userLat, window.userLong);
+            await component.call('saveAttendance', decodedText, window.userLat, window.userLong);
 
         } catch(e) {
             console.error("Scan Process Error", e);
             const resDiv = document.getElementById('scan-result');
-            resDiv.innerText = e.message || "Gagal Memproses";
+            resDiv.innerText = " " + (e.message || "Gagal Memproses");
             resDiv.classList.remove('hidden');
             resDiv.classList.add('bg-red-500');
             
@@ -278,7 +289,7 @@
          overlay.classList.remove('flex');
          
          const resDiv = document.getElementById('scan-result');
-         resDiv.innerText = "✅ Berhasil Absen!";
+         resDiv.innerText = "Berhasil Absen!";
          resDiv.classList.replace('bg-orange-500', 'bg-green-600');
          resDiv.classList.replace('bg-red-500', 'bg-green-600');
          resDiv.classList.remove('hidden');

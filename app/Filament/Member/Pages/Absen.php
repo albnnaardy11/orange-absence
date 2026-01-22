@@ -115,16 +115,13 @@ class Absen extends Page implements HasForms
             }
 
             // 7. Duplicate Check
-            $exists = Attendance::where('user_id', $userId)
+            $alreadyAttended = Attendance::where('user_id', $userId)
                 ->where('division_id', $division->id)
                 ->whereDate('created_at', now()->today())
                 ->exists();
 
-            if ($exists) {
-                 // Send success event anyway so UI stops loading, but show warning
-                 $this->dispatch('attendance-success'); 
-                 Notification::make()->title('Sudah Absen')->body('Anda sudah absen hari ini.')->warning()->send();
-                 return;
+            if ($alreadyAttended) {
+                 throw new \Exception("Anda sudah melakukan absensi hari ini!");
             }
 
             // 8. Find Schedule

@@ -53,7 +53,7 @@ class AttendancesTable
                     ->formatStateUsing(function ($state, Attendance $record) {
                         // Hanya tampilkan status approval untuk izin/sakit
                         if (in_array($record->status, ['izin', 'sakit'])) {
-                            return $state ? '✓ Disetujui' : '⏳ Menunggu';
+                            return $state ? '✓ Disetujui' : 'Menunggu';
                         }
                         // Untuk hadir dan alfa, tidak perlu approval
                         return '-';
