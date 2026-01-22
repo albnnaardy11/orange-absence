@@ -124,7 +124,7 @@ php artisan view:clear
 # Re-cache specific components safely
 php artisan config:cache
 php artisan route:cache
-php artisan livewire:discover # Critical for registering Livewire components
+# php artisan livewire:discover # Removed: Auto-discovery in Livewire v3
 php artisan filament:cache-components 2>/dev/null || true
 php artisan icons:cache 2>/dev/null || true
 
