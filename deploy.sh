@@ -17,6 +17,12 @@ echo -e "${GREEN}  🍊 ORANGE ABSENCE DEPLOYMENT${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
+# 0. Emergency Cache Nuke (Run first to prevent boot errors)
+echo -e "${YELLOW}🧹 Pre-flight: Nuking bootstrap cache...${NC}"
+rm -f bootstrap/cache/config.php
+rm -f bootstrap/cache/services.php
+rm -f bootstrap/cache/packages.php
+
 # Detect if this is first-time setup
 if [ ! -f ".env" ]; then
     echo -e "${YELLOW}⚙️  First-time setup detected!${NC}"
@@ -58,6 +64,13 @@ fi
 
 # 4. Update Dependencies (Force Update for Version Fix)
 echo -e "${GREEN}📦 Updating Composer dependencies...${NC}"
+
+# Nuke bootstrap cache first to prevent "class_exists(null)" errors during package discovery
+echo -e "${YELLOW}🧹 Nuking bootstrap cache manually...${NC}"
+rm -f bootstrap/cache/config.php
+rm -f bootstrap/cache/services.php
+rm -f bootstrap/cache/packages.php
+
 if command -v composer &> /dev/null; then
     # We use update instead of install to ensure lock file syncs with new json
     composer update --no-dev --optimize-autoloader --no-interaction
