@@ -36,225 +36,281 @@
 </div>
 </div>
 <style>
-#reader{border:none!important;min-height:300px}#reader video{object-fit:cover!important;border-radius:1.5rem;width:100%!important;height:100%!important}#reader__dashboard{display:none!important}.scan-line{position:absolute;top:15%;left:5%;width:90%;height:3px;background:linear-gradient(to right,transparent,#f97316,#fbbf24,#f97316,transparent);box-shadow:0 0 25px rgba(249,115,22,0.9);border-radius:50%;animation:line-scan 2.2s infinite ease-in-out;z-index:30}@keyframes line-scan{0%,100%{top:15%;opacity:0.2}50%{top:85%;opacity:1}}.scan-frame{position:absolute;top:0;left:0;right:0;bottom:0;z-index:20;pointer-events:none;display:flex;align-items:center;justify-content:center}.scan-focus-area{width:250px;height:250px;border:1px solid rgba(255,255,255,0.2);box-shadow:0 0 0 4000px rgba(0,0,0,0.7);border-radius:40px;position:relative}.c-marker{position:absolute;width:45px;height:45px;border:6px solid #f97316;filter:drop-shadow(0 0 10px rgba(249,115,22,0.6))}.m-tl{top:-3px;left:-3px;border-right:0;border-bottom:0;border-radius:25px 0 0 0}.m-tr{top:-3px;right:-3px;border-left:0;border-bottom:0;border-radius:0 25px 0 0}.m-bl{bottom:-3px;left:-3px;border-right:0;border-top:0;border-radius:0 0 0 25px}.m-br{bottom:-3px;right:-3px;border-left:0;border-top:0;border-radius:0 0 25px 0}
+    /* Force the reader to be a clean container for the video element */
+    #reader {
+        width: 100%;
+        height: 100%;
+        background: #000;
+        position: relative;
+        overflow: hidden;
+    }
+    #reader video {
+        object-fit: cover !important;
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 1rem;
+    }
+    /* Hide the library's default UI elements if any leak through */
+    #reader__dashboard_section_csr, #reader__dashboard_section_swaplink {
+        display: none !important;
+    }
+    
+    .scan-line {
+        position: absolute;
+        width: 100%;
+        height: 3px;
+        background: #f97316;
+        box-shadow: 0 0 10px #f97316;
+        animation: scanDown 2s infinite ease-in-out;
+        z-index: 50;
+        opacity: 0.8;
+    }
+    @keyframes scanDown {
+        0%, 100% { top: 0%; opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { top: 100%; opacity: 0; }
+    }
+    .scan-overlay {
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+        width: 70%;
+        height: 60%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5);
+        z-index: 40;
+    }
 </style>
-<script>
-    let gpsStatus = 'idle';
-    let watchId = null;
-    let scanner = null;
-    let isActive = false;
-    let lastScan = 0;
 
-    // --- GPS LOGIC ---
-    function updateGPS(force = false) {
+<script>
+    let html5QrCode = null;
+    let isScanning = false;
+    let gpsLocked = false;
+
+    // --- GPS Logic ---
+    function initGPS() {
         if (!navigator.geolocation) {
-            renderGPSUI('error', 'Browser Not Supported');
+           updateGPSUI('error', 'Browser tidak support GPS');
+           return;
+        }
+
+        updateGPSUI('loading', 'Mencari Lokasi...');
+        
+        navigator.geolocation.watchPosition(
+            (pos) => {
+                window.userLat = pos.coords.latitude;
+                window.userLong = pos.coords.longitude;
+                gpsLocked = true;
+                updateGPSUI('success', `Akurasi: ${Math.round(pos.coords.accuracy)}m`);
+            },
+            (err) => {
+                console.warn('GPS Error', err);
+                gpsLocked = false;
+                updateGPSUI('error', 'GPS Mati / Ditolak');
+            },
+            {
+                enableHighAccuracy: true,
+                maximumAge: 5000,
+                timeout: 10000
+            }
+        );
+    }
+
+    function updateGPSUI(status, text) {
+        const dot = document.getElementById('gps-dot');
+        const label = document.getElementById('gps-text');
+        const container = document.getElementById('gps-status');
+        
+        // Show container
+        container.classList.remove('opacity-0', 'translate-y-2');
+        container.classList.add('opacity-100', 'translate-y-0');
+
+        if (status === 'success') {
+            dot.className = "h-3 w-3 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]";
+            label.className = "text-xs font-bold text-green-600 dark:text-green-400";
+        } else if (status === 'loading') {
+            dot.className = "h-3 w-3 rounded-full bg-yellow-400 animate-pulse";
+            label.className = "text-xs font-medium text-yellow-600 dark:text-yellow-400";
+        } else {
+            dot.className = "h-3 w-3 rounded-full bg-red-500";
+            label.className = "text-xs font-bold text-red-600 dark:text-red-400";
+        }
+        label.innerText = text;
+    }
+
+    // --- Camera Logic ---
+    async function startScan() {
+        const statusMsg = document.getElementById('scan-result');
+        
+        // 1. Check HTTPS
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && !location.hostname.startsWith('127.0.0.')) {
+            alert("Error Kritis: Fitur Kamera HANYA jalan di HTTPS (Gembok Hijau). Hosting Anda mungkin masih HTTP.");
             return;
         }
-        if (force) {
-            gpsStatus = 'locking';
-            renderGPSUI('loading', 'Mencari Sinyal GPS...');
+
+        // 2. Check Instance
+        if (isScanning) {
+            // Stop logic if button clicked while scanning
+             if (html5QrCode) {
+                await html5QrCode.stop();
+                isScanning = false;
+                document.getElementById('reader').innerHTML = ''; // Clean cleanup
+             }
+             return;
         }
-        
-        const options = {
-            enableHighAccuracy: true,
-            timeout: 10000, 
-            maximumAge: 0
-        };
 
-        const onLocationSuccess = (pos) => {
-            window.userLat = pos.coords.latitude;
-            window.userLong = pos.coords.longitude;
-            gpsStatus = 'locked';
-            renderGPSUI('success', `Lokasi Terkunci (Akurasi: ${pos.coords.accuracy.toFixed(0)}m)`);
-        };
+        // 3. UI Prep
+        statusMsg.classList.remove('hidden', 'bg-red-500', 'bg-green-600');
+        statusMsg.classList.add('bg-orange-500');
+        statusMsg.innerText = "Membuka Kamera...";
+        statusMsg.classList.remove('hidden');
 
-        const onLocationError = (err) => {
-            console.warn("GPS Error:", err.message);
-            if (gpsStatus !== 'locked') renderGPSUI('error', 'Gagal Mengunci Lokasi. Pastikan GPS Hidup.');
-        };
+        try {
+            // 4. Initialize Core Library
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("reader");
+            }
 
-        if (watchId) navigator.geolocation.clearWatch(watchId);
-        watchId = navigator.geolocation.watchPosition(onLocationSuccess, onLocationError, options);
+            // 5. Start Camera
+            const config = { 
+                fps: 30, 
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            };
+            
+            await html5QrCode.start(
+                { facingMode: "environment" }, // Prefer Back Camera
+                config,
+                onScanSuccess,
+                onScanFailure
+            );
+
+            // 6. Success State
+            isScanning = true;
+            statusMsg.classList.add('hidden'); // Hide "Opening..." message when video starts
+            
+            // Add Overlay
+            const reader = document.getElementById('reader');
+            if (!reader.querySelector('.scan-overlay')) {
+                reader.insertAdjacentHTML('beforeend', '<div class="scan-overlay"></div><div class="scan-line"></div>');
+            }
+
+        } catch (err) {
+            console.error("Camera Start Error:", err);
+            isScanning = false;
+            
+            let errorText = "Gagal membuka kamera.";
+            if (err?.name === 'NotAllowedError') {
+                 errorText = "Izin Kamera Ditolak! Harap Check Settings Browser Anda → Site Settings → Camera → Allow.";
+            } else if (err?.name === 'NotFoundError') {
+                 errorText = "Kamera tidak ditemukan di perangkat ini.";
+            } else if (err?.name === 'NotReadableError') {
+                 errorText = "Kamera sedang digunakan aplikasi lain atau error hardware.";
+            } else if (location.protocol !== 'https:') {
+                 errorText = "Wajib HTTPS agar kamera berjalan.";
+            }
+
+            statusMsg.innerText = errorText;
+            statusMsg.classList.replace('bg-orange-500', 'bg-red-500');
+            statusMsg.classList.remove('hidden');
+            
+            alert(errorText); // Force alert for mobile users to see immediately
+        }
     }
 
-    function renderGPSUI(type, text) {
-        const el = document.getElementById('gps-status');
-        const dot = document.getElementById('gps-dot');
-        const txt = document.getElementById('gps-text');
-        if (!el) return;
-
-        el.classList.remove('opacity-0', 'translate-y-2');
-        el.classList.add('opacity-100', 'translate-y-0');
-
-        if (type === 'success') {
-            dot.className = "h-2.5 w-2.5 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]";
-            txt.className = "text-[10px] md:text-xs font-black text-green-600 dark:text-green-400";
-        } else if (type === 'error') {
-            dot.className = "h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse";
-            txt.className = "text-[10px] md:text-xs font-bold text-red-500";
-        } else {
-            dot.className = "h-2.5 w-2.5 rounded-full bg-orange-400 animate-bounce";
-            txt.className = "text-[10px] md:text-xs font-medium text-orange-500";
-        }
-        txt.innerText = text;
-    }
-
-    document.addEventListener('DOMContentLoaded', () => updateGPS(true));
-
-    // --- SCANNER LOGIC ---
-    async function processScan(code) {
-        // Prevent double processing
-        if (isActive) return;
+    let isProcessing = false;
+    async function onScanSuccess(decodedText, decodedResult) {
+        if (isProcessing) return;
         
-        // Anti-bounce (10 seconds)
-        const now = Date.now();
-        if (now - lastScan < 10000) return;
-        
-        isActive = true;
-        lastScan = now;
-
-        // Visual Feedback
+        isProcessing = true;
         if (navigator.vibrate) navigator.vibrate(200);
-        showProcessingUI(true);
+
+        // UI Feedback
+        const overlay = document.getElementById('global-processing');
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
 
         try {
-            if (scanner) {
-                // Pause instead of stop to keep camera active for next scan if needed, 
-                // but usually better to stop to save battery, user can tap to scan again.
-                // We will pause here to freeze frame.
-                await scanner.pause(); 
-            }
-        } catch(e) { console.log("Pause error", e); }
-
-        try {
-            // Check GPS logic
-            if (!window.userLat || !window.userLong) {
-                if (confirm("GPS belum terkunci! Apakah Anda yakin GPS sudah aktif? Klik OK untuk mencoba lagi dengan lokasi terakhir.")) {
-                    // Try one last force update? no, just proceed if we have *something*, else error
-                    if(!window.userLat) throw new Error("Wajib mengaktifkan GPS untuk Absensi!");
-                } else {
-                    throw new Error("GPS dinonaktifkan oleh user.");
-                }
+            // Stop camera immediately to save resources/prevent double scan
+            if (html5QrCode) {
+                await html5QrCode.pause();
             }
 
-            // Call Server
-            await @this.call('saveAttendance', code, window.userLat, window.userLong);
-            
-        } catch (error) {
-            console.error("Scan Submission Error:", error);
-            showProcessingUI(false);
-            
-            const results = document.getElementById('scan-result');
-            if (results) {
-                results.innerText = "GAGAL: " + (error.message || 'Error tidak diketahui');
-                results.classList.remove('hidden', 'bg-orange-500', 'bg-green-600');
-                results.classList.add('bg-red-500');
+            if (!gpsLocked && !window.userLat) {
+               throw new Error("GPS Belum Terkunci! Tunggu indikator GPS hijau.");
             }
+
+            // Send to Server
+            await @this.call('saveAttendance', decodedText, window.userLat, window.userLong);
+
+        } catch(e) {
+            console.error("Scan Process Error", e);
+            const resDiv = document.getElementById('scan-result');
+            resDiv.innerText = e.message || "Gagal Memproses";
+            resDiv.classList.remove('hidden');
+            resDiv.classList.add('bg-red-500');
             
-            // Resume if error allows
+            // Resume after error
             setTimeout(() => {
-               isActive = false; 
-               if(scanner) scanner.resume();
+                isProcessing = false;
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+                if (html5QrCode) html5QrCode.resume();
             }, 3000);
         }
     }
 
-    function showProcessingUI(show) {
-        const overlay = document.getElementById('global-processing');
-        const results = document.getElementById('scan-result');
-        
-        if (show) {
-            overlay.classList.remove('hidden');
-            overlay.classList.add('flex'); // Ensure flex is added
-            if (results) {
-                results.innerText = "MEMPROSES DATA ABSENSI...";
-                results.classList.remove('hidden', 'bg-red-500', 'bg-green-600');
-                results.classList.add('bg-orange-500');
-            }
-        } else {
-            overlay.classList.add('hidden');
-            overlay.classList.remove('flex');
-        }
+    function onScanFailure(error) {
+        // console.warn(`Code scan error = ${error}`);
+        // excessive logging causes lag, better keep silent for "no QR found" frames
     }
 
-    // --- EVENT LISTENERS ---
+    // --- Listeners ---
+    document.addEventListener('DOMContentLoaded', initGPS);
+
+    // Livewire Events
     window.addEventListener('attendance-success', () => {
-        showProcessingUI(false);
-        const results = document.getElementById('scan-result');
-        if (results) {
-            results.innerText = "✅ ABSENSI BERHASIL TERCATAT!";
-            results.classList.replace('bg-orange-500', 'bg-green-600');
-        }
-        
-        // Stop scanner completely on success? 
-        // Or Resume after delay? Usually scan once per day per session.
-        // Let's resume after long delay just in case.
-        setTimeout(() => {
-            isActive = false;
-            // Optional: scanner.resume(); 
-            // Better UX: Keep it paused/stopped until user clicks button again if they want.
-            // But request was "fast response", maybe they have multiple people? 
-            // Assuming personal device.
-            if(scanner) scanner.resume();
-            results.classList.add('hidden');
-        }, 5000); 
+         const overlay = document.getElementById('global-processing');
+         overlay.classList.add('hidden');
+         overlay.classList.remove('flex');
+         
+         const resDiv = document.getElementById('scan-result');
+         resDiv.innerText = "✅ Berhasil Absen!";
+         resDiv.classList.replace('bg-orange-500', 'bg-green-600');
+         resDiv.classList.replace('bg-red-500', 'bg-green-600');
+         resDiv.classList.remove('hidden');
+
+         // Cleanup
+         isProcessing = false;
+         isScanning = false;
+         if (html5QrCode) {
+             html5QrCode.stop().then(() => {
+                 html5QrCode.clear();
+             });
+         }
     });
 
     window.addEventListener('attendance-failure', (e) => {
-        showProcessingUI(false);
-        const results = document.getElementById('scan-result');
-        if (results) {
-            results.innerText = "❌ GAGAL: " + (e.detail.error || 'Server Error');
-            results.classList.replace('bg-orange-500', 'bg-red-500');
-        }
-        setTimeout(() => {
-            isActive = false;
-            if(scanner) scanner.resume();
-        }, 3000);
+         const overlay = document.getElementById('global-processing');
+         overlay.classList.add('hidden');
+         overlay.classList.remove('flex');
+
+         const resDiv = document.getElementById('scan-result');
+         resDiv.innerText = " " + (e.detail.error || 'Gagal');
+         resDiv.classList.add('bg-red-500');
+         resDiv.classList.remove('hidden');
+         
+         isProcessing = false;
+         setTimeout(() => {
+             if (html5QrCode) html5QrCode.resume();
+         }, 2000);
     });
 
-    // --- INIT SCANNER ---
-    function startScan() {
-        const reader = document.getElementById('reader');
-        // Add overlay UI if missing
-        if (!reader.querySelector('.scan-frame')) {
-             reader.innerHTML = ''; // clear first
-             reader.insertAdjacentHTML('beforeend', `<div class="scan-frame"><div class="scan-line"></div><div class="scan-focus-area"><div class="c-marker m-tl"></div><div class="c-marker m-tr"></div><div class="c-marker m-bl"></div><div class="c-marker m-br"></div></div></div>`);
-        }
-
-        // If scanner exists, clear it first
-        if (scanner) {
-            scanner.clear().then(initNewScanner).catch(err => {
-                console.error("Clear failed", err);
-                initNewScanner();
-            });
-        } else {
-            initNewScanner();
-        }
-    }
-
-    function initNewScanner() {
-        // High Performance Settings
-        const config = {
-            fps: 60, // Ultra smooth scanning
-            qrbox: { width: 280, height: 280 }, // Slightly larger box
-            aspectRatio: 1.0,
-            videoConstraints: {
-                facingMode: "environment", // Back camera
-                focusMode: "continuous",   // Auto focus
-                width: { ideal: 1920 },    // High Res
-                height: { ideal: 1080 }
-            }
-        };
-
-        scanner = new Html5QrcodeScanner("reader", config, false);
-        
-        // Custom SUCCESS callback only
-        scanner.render(processScan, (err) => {
-            // Ignore scan errors (scanning emptiness)
-        });
-    }
 </script>
+</div>
+
 </x-filament-panels::page>
 </div>
