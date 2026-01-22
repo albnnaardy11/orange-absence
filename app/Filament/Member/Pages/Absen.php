@@ -143,8 +143,8 @@ class Absen extends Page implements HasForms
                 'is_approved' => true,
                 'latitude' => $userLat,
                 'longitude' => $userLong,
-                'is_qr_verified' => true,
-                'verified_at' => now(),
+                // 'is_qr_verified' => true, // Column might be missing on production
+                // 'verified_at' => now(),   // Column might be missing on production
             ]);
 
             \Illuminate\Support\Facades\Log::info("QR_SUCCESS: User {$userId} Attendance ID: {$attendance->id}");
