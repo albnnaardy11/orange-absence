@@ -27,6 +27,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Force register Filament Login component to fix resolution issues
         \Livewire\Livewire::component('filament.auth.pages.login', \Filament\Auth\Pages\Login::class);
+        
+        // Force register LiveAttendance component
+        \Livewire\Livewire::component('app.filament.pages.live-attendance', \App\Filament\Pages\LiveAttendance::class);
     }
 
     public function boot(): void
