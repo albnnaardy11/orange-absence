@@ -92,5 +92,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Register Login Listener
         Event::listen(Login::class, UserLoginListener::class);
+
+        // Super Admin & Secretary Bypass
+        \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
+            return $user->hasAnyRole(['super_admin', 'secretary']) ? true : null;
+        });
     }
 }
