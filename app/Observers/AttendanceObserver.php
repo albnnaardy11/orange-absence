@@ -84,17 +84,7 @@ class AttendanceObserver
                     ->warning()
                     ->sendToDatabase($user);
 
-                // Auto-Suspension Check (Only for Members)
-                if ($user->hasRole('member') && $user->refresh()->points >= 30 && !$user->is_suspended) {
-                    $user->update(['is_suspended' => true]);
-                    
-                    \Filament\Notifications\Notification::make()
-                        ->title('Akun Ditangguhkan!')
-                        ->body('Akun Anda telah dikunci otomatis karena poin mencapai 30.')
-                        ->danger()
-                        ->persistent()
-                        ->sendToDatabase($user);
-                }
+                // UserObserver will handle auto-suspension if points reach 30
             }
         }
     }

@@ -82,6 +82,7 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
         Attendance::observe(AttendanceObserver::class);
         \App\Models\Schedule::observe(\App\Observers\ScheduleObserver::class);
+        \App\Models\User::observe(\App\Observers\UserObserver::class);
 
         // Track IP and Device in Activity Log
         LogBatch::startBatch();
