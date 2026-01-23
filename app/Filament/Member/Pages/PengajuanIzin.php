@@ -8,6 +8,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Schemas\Schema;
 use Filament\Forms;
 use Filament\Notifications\Notification;
+use Filament\Notifications\Actions\Action as NotificationAction;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 
@@ -77,7 +78,7 @@ class PengajuanIzin extends Page implements HasForms
             ->where('day', $today)
             ->first();
 
-        Attendance::create([
+        $attendance = Attendance::create([
             'user_id' => Auth::id(),
             'division_id' => $data['division_id'],
             'schedule_id' => $schedule?->id,
@@ -86,6 +87,21 @@ class PengajuanIzin extends Page implements HasForms
             'proof_image' => $data['proof_image'],
             'is_approved' => false,
         ]);
+
+        // Notify Admins and Secretaries
+        $recipients = \App\Models\User::role(['super_admin', 'secretary'])->get();
+        
+        Notification::make()
+            ->title('Permohonan Izin Baru')
+            ->body(Auth::user()->name . " mengajukan " . $data['status'] . " di divisi " . $attendance->division->name)
+            ->warning()
+            ->icon('heroicon-o-document-text')
+            ->actions([
+                NotificationAction::make('view')
+                    ->button()
+                    ->url(\App\Filament\Resources\Attendances\AttendanceResource::getUrl('edit', ['record' => $attendance->id])),
+            ])
+            ->sendToDatabase($recipients);
 
         Notification::make()
             ->title('Pengajuan Terkirim')
