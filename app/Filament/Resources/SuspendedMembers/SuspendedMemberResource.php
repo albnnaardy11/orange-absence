@@ -5,7 +5,7 @@ namespace App\Filament\Resources\SuspendedMembers;
 use App\Filament\Resources\SuspendedMembers\Pages;
 use App\Models\User;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -32,9 +32,9 @@ class SuspendedMemberResource extends Resource
         return parent::getEloquentQuery()->where('is_suspended', true);
     }
 
-    public static function form(Schema $schema): Schema
+    public static function form(Form $form): Form
     {
-        return $schema
+        return $form
             ->components([
                 TextInput::make('name')
                     ->disabled()

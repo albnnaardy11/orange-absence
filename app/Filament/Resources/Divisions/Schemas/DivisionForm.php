@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Divisions\Schemas;
 
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 use Filament\Forms;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;
@@ -11,9 +11,9 @@ use Filament\Forms\Components\Textarea;
 
 class DivisionForm
 {
-    public static function configure(Schema $schema): Schema
+    public static function configure(Form $form): Form
     {
-        return $schema
+        return $form
             ->components([
                 TextInput::make('name')
                     ->required()

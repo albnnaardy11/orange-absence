@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Users\RelationManagers;
 
 use Filament\Forms;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Actions\CreateAction;
@@ -19,9 +19,9 @@ class CashLogsRelationManager extends RelationManager
 
     protected static ?string $title = 'Log Pembayaran Kas';
 
-    public function form(Schema $schema): Schema
+    public function form(Form $form): Form
     {
-        return $schema
+        return $form
             ->components([
                 Forms\Components\TextInput::make('amount')
                     ->required()

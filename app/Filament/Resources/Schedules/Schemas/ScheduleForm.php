@@ -2,14 +2,14 @@
 
 namespace App\Filament\Resources\Schedules\Schemas;
 
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 use Filament\Forms;
 
 class ScheduleForm
 {
-    public static function configure(Schema $schema): Schema
+    public static function configure(Form $form): Form
     {
-        return $schema
+        return $form
             ->components([
                 Forms\Components\Select::make('division_id')
                     ->relationship('division', 'name')

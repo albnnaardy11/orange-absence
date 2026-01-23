@@ -4,15 +4,15 @@ namespace App\Filament\Member\Pages\Auth;
 
 use Filament\Auth\Pages\EditProfile as BaseEditProfile;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
 class EditProfile extends BaseEditProfile
 {
-    public function form(Schema $schema): Schema
+    public function form(Form $form): Form
     {
-        return $schema
+        return $form
             ->components([
                 $this->getNameFormComponent(),
                 $this->getEmailFormComponent(),

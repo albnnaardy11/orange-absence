@@ -5,7 +5,7 @@ namespace App\Filament\Member\Pages;
 use Filament\Pages\Page;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use App\Services\VerificationCodeService;
@@ -56,9 +56,9 @@ class Absen extends Page implements HasForms
         }
     }
 
-    public function form(Schema $schema): Schema
+    public function form(Form $form): Form
     {
-        return $schema
+        return $form
             ->components([
                 Forms\Components\Select::make('division_id')
                     ->label('Pilih Divisi')

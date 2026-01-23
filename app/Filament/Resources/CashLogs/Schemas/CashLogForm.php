@@ -2,14 +2,14 @@
 
 namespace App\Filament\Resources\CashLogs\Schemas;
 
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 use Filament\Forms;
 
 class CashLogForm
 {
-    public static function configure(Schema $schema): Schema
+    public static function configure(Form $form): Form
     {
-        return $schema
+        return $form
             ->components([
                 Forms\Components\Select::make('user_id')
                     ->relationship(

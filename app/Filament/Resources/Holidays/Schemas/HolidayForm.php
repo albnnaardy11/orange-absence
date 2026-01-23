@@ -4,13 +4,13 @@ namespace App\Filament\Resources\Holidays\Schemas;
 
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 
 class HolidayForm
 {
-    public static function configure(Schema $schema): Schema
+    public static function configure(Form $form): Form
     {
-        return $schema
+        return $form
             ->components([
                 TextInput::make('name')
                     ->required(),

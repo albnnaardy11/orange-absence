@@ -9,7 +9,7 @@ use App\Filament\Resources\Divisions\Schemas\DivisionForm;
 use App\Filament\Resources\Divisions\Tables\DivisionsTable;
 use App\Models\Division;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
 
 class DivisionResource extends Resource
@@ -20,9 +20,9 @@ class DivisionResource extends Resource
 
     protected static string | \UnitEnum | null $navigationGroup = 'Master Data';
 
-    public static function form(Schema $schema): Schema
+    public static function form(Form $form): Form
     {
-        return DivisionForm::configure($schema);
+        return DivisionForm::configure($form);
     }
 
     public static function table(Table $table): Table

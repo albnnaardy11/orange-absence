@@ -2,16 +2,16 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 use Filament\Forms;
 use Illuminate\Support\Facades\Hash;
 use Filament\Models\Contracts\FilamentUser;
 
 class UserForm
 {
-    public static function configure(Schema $schema): Schema
+    public static function configure(Form $form): Form
     {
-        return $schema
+        return $form
             ->components([
                 Forms\Components\TextInput::make('name')
                     ->required()

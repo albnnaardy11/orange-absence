@@ -10,7 +10,7 @@ use App\Models\Division;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Schemas\Schema;
+use Filament\Forms\Form;
 
 class LiveAttendance extends Page implements HasForms
 {
@@ -39,9 +39,9 @@ class LiveAttendance extends Page implements HasForms
         $this->generateQr();
     }
 
-    public function form(Schema $schema): Schema
+    public function form(Form $form): Form
     {
-        return $schema
+        return $form
             ->components([
                 Select::make('division_id')
                     ->label('Select Division to Project')
