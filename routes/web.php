@@ -35,4 +35,16 @@ Route::get('/logout', function () {
     return redirect('/');
 });
 
+// Storage Proxy for Shared Hosting (Fixed Image Issues)
+Route::get('/storage/{path}', function ($path) {
+    $path = str_replace('../', '', $path);
+    $fullPath = storage_path('app/public/' . $path);
+    
+    if (!file_exists($fullPath)) {
+        abort(404);
+    }
+    
+    return response()->file($fullPath);
+})->where('path', '.*');
+
 
