@@ -25,14 +25,7 @@ class AttendanceForm
                         'sakit' => 'Sakit',
                         'alfa' => 'Alfa',
                     ])
-                    ->required()
-                    ->reactive()
-                    ->afterStateUpdated(function ($state, callable $set) {
-                        // Auto-approve untuk status hadir
-                        if ($state === 'hadir') {
-                            $set('is_approved', true);
-                        }
-                    }),
+                    ->required(),
                 Forms\Components\DateTimePicker::make('created_at')
                     ->label('Waktu Absen'),
                 Forms\Components\FileUpload::make('proof_image')
@@ -45,9 +38,7 @@ class AttendanceForm
                     ->columnSpanFull(),
                 Forms\Components\Toggle::make('is_approved')
                     ->label('Disetujui Admin')
-                    ->columnSpanFull()
-                    ->visible(fn (callable $get) => in_array($get('status'), ['izin', 'sakit']))
-                    ->helperText('Status "Hadir" otomatis disetujui'),
+                    ->columnSpanFull(),
             ]);
     }
 }

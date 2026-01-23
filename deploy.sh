@@ -120,6 +120,7 @@ echo -e "${GREEN}⚡ Optimizing for production...${NC}"
 php artisan filament:optimize-clear
 php artisan optimize:clear
 php artisan view:clear
+php artisan view:cache
 
 # Re-cache specific components safely
 php artisan config:cache

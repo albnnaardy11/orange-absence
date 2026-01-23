@@ -14,6 +14,7 @@ use App\Models\Schedule;
 use App\Models\Division;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Crypt;
 
 class Absen extends Page implements HasForms
 {
@@ -31,12 +32,13 @@ class Absen extends Page implements HasForms
     public ?array $data = [];
     public $user_lat;
     public $user_long;
+    public ?string $qr_payload = null;
 
     public function mount(): void
     {
         $this->form->fill();
 
-        // 1. Interactive Greeting (Check if user already attended today)
+        // Interactive Greeting
         if (Auth::check()) {
             $user = Auth::user();
             $attendedToday = Attendance::where('user_id', $user->id)
@@ -49,7 +51,6 @@ class Absen extends Page implements HasForms
                     ->body("Kamu sudah melakukan absensi hari ini. Terima kasih!")
                     ->color('info')
                     ->icon('heroicon-o-check-badge')
-                    ->seconds(5)
                     ->send();
             }
         }
@@ -63,24 +64,19 @@ class Absen extends Page implements HasForms
                     ->label('Pilih Divisi')
                     ->options(fn () => Auth::check() ? Auth::user()->divisions()->pluck('name', 'id') : [])
                     ->required()
-                    ->native(false), // Better UI
+                    ->native(false),
                 Forms\Components\Hidden::make('qr_payload'),
             ])
             ->statePath('data');
     }
 
-    public ?string $qr_payload = null;
-
     public function saveAttendance(?string $payloadStr = null, $lat = null, $long = null): void
     {
         $userId = Auth::id();
-        
-        // 1. Data Gathering
         $qrPayload = $payloadStr ?? $this->qr_payload;
         $userLat = $lat ?? $this->user_lat;
         $userLong = $long ?? $this->user_long;
 
-        // Logging
         \Illuminate\Support\Facades\Log::info("QR_SCAN_ATTEMPT: User: {$userId}", [
             'payload_present' => !empty($qrPayload),
             'lat' => $userLat,
@@ -88,14 +84,12 @@ class Absen extends Page implements HasForms
         ]);
 
         try {
-            // 2. Initial Validation
             if (empty($qrPayload)) {
                 throw new \Exception("Tidak ada data QR yang terbaca.");
             }
 
-            // 3. Decryption
             try {
-                $payload = \Illuminate\Support\Facades\Crypt::decrypt($qrPayload);
+                $payload = Crypt::decrypt($qrPayload);
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("QR_DECRYPT_FAIL: User {$userId} - " . $e->getMessage());
                 throw new \Exception("QR Code tidak valid! Pastikan Anda scan QR resmi dari portal.");
@@ -105,52 +99,50 @@ class Absen extends Page implements HasForms
                 throw new \Exception("Format QR rusak atau tidak dikenali.");
             }
 
-            // 4. Timestamp Check (Relaxed to 5 minutes to account for slow connections/devices)
+            // Timestamp Check (300s / 5m tolerance)
             $secondsDiff = abs(now()->timestamp - $payload['timestamp']);
             if ($secondsDiff > 300) { 
                  throw new \Exception("QR Code kadaluwarsa. Silakan refresh layar Admin.");
             }
 
-            // 5. Division Validation
             $division = Division::find($payload['division_id']);
             if (!$division) {
                  throw new \Exception("Divisi dalam QR tidak ditemukan di sistem.");
             }
 
-            // 6. Geofencing (If Enforced)
+            // Geofencing (Strictly using division settings)
             if ($division->latitude && $division->longitude) {
                 if (!$userLat || !$userLong) {
-                     // If device didn't send GPS, we suspect browser permission issue
-                     throw new \Exception("Lokasi tidak terdeteksi. Izinkan akses GPS di browser Anda.");
+                     throw new \Exception("Lokasi tidak terdeteksi. Silakan aktifkan GPS dan refresh halaman.");
                 }
 
                 $distance = $this->calculateDistance($userLat, $userLong, $division->latitude, $division->longitude);
+                $radius = $division->radius ?? 100; // Default to 100 if not set
+                $tolerance = 10; // 10 meter tolerance for GPS drift
                 
-                // Allow up to 300m for "GPS drift" or improved UX
-                if ($distance > 300) { 
-                    \Illuminate\Support\Facades\Log::warning("GEOFENCE_FAIL: User {$userId} is {$distance}m away.");
-                    throw new \Exception("Anda terlalu jauh ({$distance} meter) dari lokasi absen.");
+                if ($distance > ($radius + $tolerance)) { 
+                    \Illuminate\Support\Facades\Log::warning("GEOFENCE_FAIL: User {$userId} is {$distance}m away from {$division->name} (Limit: {$radius}m)");
+                    throw new \Exception("Anda berada di luar area eskul, jangan bolos yaaa");
                 }
             }
 
-            // 7. Duplicate Check
+            // Duplicate Check (Strict 1x per day total for the user)
             $alreadyAttended = Attendance::where('user_id', $userId)
-                ->where('division_id', $division->id)
                 ->whereDate('created_at', now()->today())
                 ->exists();
 
             if ($alreadyAttended) {
-                 throw new \Exception("Oops! Anda sudah absen hari ini (via QR/Kode). Tidak perlu absen double ya!");
+                 throw new \Exception("Oops! Anda sudah melakukan absensi hari ini. Sistem membatasi hanya 1x absen per hari.");
             }
 
-            // 8. Find Schedule
+            // Find Schedule
             $activeSchedule = Schedule::where('division_id', $division->id)
                 ->where('day', now()->format('l'))
                 ->whereTime('start_time', '<=', now())
                 ->whereTime('end_time', '>=', now())
                 ->first();
 
-            // 9. Create Record
+            // Create Record
             $attendance = Attendance::create([
                 'user_id' => $userId,
                 'division_id' => $division->id,
@@ -159,16 +151,12 @@ class Absen extends Page implements HasForms
                 'is_approved' => true,
                 'latitude' => $userLat,
                 'longitude' => $userLong,
-                // 'is_qr_verified' => true, // Column might be missing on production
-                // 'verified_at' => now(),   // Column might be missing on production
             ]);
 
             \Illuminate\Support\Facades\Log::info("QR_SUCCESS: User {$userId} Attendance ID: {$attendance->id}");
 
-            // 10. Success UI & Dynamic Greeting
+            // Greeting & Quote
             $classroom = $activeSchedule ? $activeSchedule->classroom : $division->name;
-            
-            // Time-based Greeting
             $hour = now()->hour;
             $timeGreeting = match(true) {
                 $hour < 11 => "Selamat Pagi!",
@@ -177,7 +165,6 @@ class Absen extends Page implements HasForms
                 default => "Selamat Malam!",
             };
 
-            // Random Motivational Quote
             $quotes = [
                 "Semangat belajarnya hari ini!",
                 "Jangan lupa berdoa sebelum mulai ya!",
@@ -191,7 +178,7 @@ class Absen extends Page implements HasForms
                 ->title("{$timeGreeting} Absen Berhasil!")
                 ->body("{$randomQuote}\n Tercatat di: {$classroom}")
                 ->success()
-                ->persistent() // Keeps it visible until closed/next action
+                ->persistent()
                 ->send();
             
             $this->dispatch('attendance-success'); 
@@ -204,92 +191,19 @@ class Absen extends Page implements HasForms
         }
     }
 
-    public function submit(?string $manualPayload = null): void
-    {
-        $userId = Auth::id();
-        $throttleKey = 'absen-manual:' . $userId;
-        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            Notification::make()->title('Terlalu banyak mencoba')->danger()->send();
-            return;
-        }
-        RateLimiter::hit($throttleKey, 60);
-
-        $data = $this->form->getState();
-        $qrPayload = $manualPayload ?? $data['qr_payload'];
-
-        try {
-            if (empty($qrPayload)) {
-                throw new \Exception("Silakan scan QR Code terlebih dahulu.");
-            }
-
-            // Decrypt QR
-            try {
-                $payload = \Illuminate\Support\Facades\Crypt::decrypt($qrPayload);
-            } catch (\Exception $e) {
-                throw new \Exception("QR Code tidak valid.");
-            }
-
-            if (!isset($payload['division_id']) || !isset($payload['timestamp'])) {
-                throw new \Exception("Payload QR tidak lengkap.");
-            }
-
-            $divisionId = $data['division_id'] ?? $payload['division_id'];
-
-            if (abs(now()->timestamp - $payload['timestamp']) > 180) {
-                throw new \Exception("QR Code sudah kadaluwarsa.");
-            }
-
-            // Geofencing
-            $division = Division::find($divisionId);
-            if ($division && $division->latitude && $division->longitude && $this->user_lat && $this->user_long) {
-                if ($this->calculateDistance($this->user_lat, $this->user_long, $division->latitude, $division->longitude) > 200) {
-                    throw new \Exception("Anda di luar jangkauan radius.");
-                }
-            }
-
-            $alreadyAttended = Attendance::where('user_id', $userId)
-                ->where('division_id', $divisionId)
-                ->whereDate('created_at', now()->toDateString())
-                ->exists();
-
-            if ($alreadyAttended) {
-                throw new \Exception("Anda sudah melakukan absensi untuk divisi ini hari ini.");
-            }
-
-            $nowTime = now()->format('H:i:s');
-            $currentDay = now()->format('l');
-            $activeSchedule = Schedule::where('division_id', $divisionId)
-                ->where('day', $currentDay)
-                ->where('start_time', '<=', $nowTime)
-                ->where('end_time', '>=', $nowTime)
-                ->first();
-
-            Attendance::create([
-                'user_id' => $userId,
-                'division_id' => $divisionId,
-                'schedule_id' => $activeSchedule?->id,
-                'status' => 'hadir',
-                'is_approved' => true,
-                'latitude' => $this->user_lat,
-                'longitude' => $this->user_long,
-                'is_qr_verified' => true,
-                'verified_at' => now(),
-            ]);
-
-            Notification::make()->title('Absensi Berhasil!')->success()->send();
-            $this->form->fill();
-
-        } catch (\Exception $e) {
-            Notification::make()->title($e->getMessage())->danger()->send();
-        }
-    }
-
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {
-        $theta = $lon1 - $lon2;
-        $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
-        $dist = acos($dist);
-        $dist = rad2deg($dist);
-        return round($dist * 60 * 1.1515 * 1.609344 * 1000);
+        $earthRadius = 6371000; // in meters
+
+        $latDelta = deg2rad($lat2 - $lat1);
+        $lonDelta = deg2rad($lon2 - $lon1);
+
+        $a = sin($latDelta / 2) * sin($latDelta / 2) +
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($lonDelta / 2) * sin($lonDelta / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 }

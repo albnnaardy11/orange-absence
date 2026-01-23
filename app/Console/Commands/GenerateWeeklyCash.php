@@ -29,10 +29,13 @@ class GenerateWeeklyCash extends Command
         $date = now()->toDateString();
         
         $count = 0;
+        $startOfWeek = now()->startOfWeek()->toDateString();
+        $endOfWeek = now()->endOfWeek()->toDateString();
+
         foreach ($users as $user) {
-            // Avoid duplicate billing for the same day
+            // Avoid duplicate billing for the same week
             $exists = \App\Models\CashLog::where('user_id', $user->id)
-                ->where('date', $date)
+                ->whereBetween('date', [$startOfWeek, $endOfWeek])
                 ->exists();
 
             if (!$exists) {

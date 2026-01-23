@@ -3,7 +3,6 @@
 namespace App\Filament\Member\Pages;
 
 use App\Models\Attendance;
-use App\Notifications\LeaveRequestNotification;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Schemas\Schema;
@@ -71,21 +70,6 @@ class PengajuanIzin extends Page implements HasForms
     public function create(): void
     {
         $data = $this->form->getState();
-
-        // Check if user has already made any attendance record today for this division
-        $alreadyAttended = Attendance::where('user_id', Auth::id())
-            ->where('division_id', $data['division_id'])
-            ->whereDate('created_at', now()->toDateString())
-            ->exists();
-
-        if ($alreadyAttended) {
-            Notification::make()
-                ->title('Gagal Mengajukan')
-                ->body('Anda tidak bisa mengajukan izin/sakit karena Anda sudah memiliki catatan absensi (Hadir/Izin/Sakit) hari ini.')
-                ->danger()
-                ->send();
-            return;
-        }
         
         // Find current schedule for the division
         $today = now()->format('l');
@@ -93,7 +77,7 @@ class PengajuanIzin extends Page implements HasForms
             ->where('day', $today)
             ->first();
 
-        $attendance = Attendance::create([
+        Attendance::create([
             'user_id' => Auth::id(),
             'division_id' => $data['division_id'],
             'schedule_id' => $schedule?->id,
@@ -103,27 +87,11 @@ class PengajuanIzin extends Page implements HasForms
             'is_approved' => false,
         ]);
 
-        // Kirim notifikasi ke member (toast)
         Notification::make()
             ->title('Pengajuan Terkirim')
             ->body('Permohonan izin/sakit Anda telah terkirim dan menunggu persetujuan Admin/Sekretaris.')
             ->success()
             ->send();
-
-        // Kirim notifikasi database ke admin dan sekretaris di divisi yang sama
-        $recipients = \App\Models\User::query()
-            ->where(function ($query) use ($data) {
-                $query->whereHas('roles', fn ($q) => $q->where('name', 'super_admin'))
-                    ->orWhere(function ($q) use ($data) {
-                        $q->whereHas('roles', fn ($r) => $r->where('name', 'panel_user'))
-                          ->whereHas('divisions', fn ($d) => $d->where('divisions.id', $data['division_id']));
-                    });
-            })
-            ->get();
-
-        foreach ($recipients as $recipient) {
-            $recipient->notify(new LeaveRequestNotification($attendance));
-        }
 
         $this->form->fill();
     }

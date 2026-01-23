@@ -10,128 +10,87 @@ use Illuminate\Support\Facades\DB;
 
 class VerificationCodeService
 {
-    public function generate(int $divisionId)
-    {
-        // 1. Check for today's schedule
-        $day = now()->format('l');
-        $schedule = Schedule::where('division_id', $divisionId)
-            ->where('day', $day)
-            ->first();
-
-        // 2. Determine time range
-        $start = now();
-        $end = now()->addHours(2); // Default 2 hours if no schedule
-
-        if ($schedule) {
-            $start = now()->setTimeFromTimeString($schedule->start_time);
-            $end = now()->setTimeFromTimeString($schedule->end_time);
-            
-            if ($end->lessThan($start)) {
-                $end->addDay();
-            }
-        }
-
-        // 3. Create or Update code
-        return VerificationCode::updateOrCreate(
-            [
-                'division_id' => $divisionId,
-                'date' => now()->toDateString(),
-            ],
-            [
-                'schedule_id' => $schedule?->id,
-                'code' => sprintf("%06d", mt_rand(1, 999999)),
-                'start_at' => $start,
-                'expires_at' => $end,
-                'is_active' => true,
-            ]
-        );
-    }
-
     public function validate(string $code, int $divisionId, int $userId, $userLat = null, $userLong = null)
     {
-        // Fallback multi-level: Form Arguments -> Laravel Cookie -> Raw PHP Cookie
-        $userLat = $userLat ?: request()->cookie('user_lat') ?: ($_COOKIE['user_lat'] ?? null);
-        $userLong = $userLong ?: request()->cookie('user_long') ?: ($_COOKIE['user_long'] ?? null);
+        return $this->processValidation($code, $divisionId, $userId, $userLat, $userLong);
+    }
+
+    public function validateQR(int $divisionId, int $userId, int $codeId, $userLat = null, $userLong = null)
+    {
+        $verificationCode = VerificationCode::find($codeId);
+        
+        if (!$verificationCode || !$verificationCode->is_active || $verificationCode->expires_at < now()) {
+             throw new \Exception('Sesi absensi ini sudah berakhir atau tidak aktif.');
+        }
+
+        return $this->processValidation(null, $divisionId, $userId, $userLat, $userLong, $verificationCode);
+    }
+
+    private function processValidation(?string $code, int $divisionId, int $userId, $userLat, $userLong, $verificationCode = null)
+    {
+        // Fallback for location (Trim and ensure we handle empty strings from frontend)
+        $userLat = trim($userLat ?: request()->cookie('user_lat') ?: ($_COOKIE['user_lat'] ?? ''));
+        $userLong = trim($userLong ?: request()->cookie('user_long') ?: ($_COOKIE['user_long'] ?? ''));
+
+        // Convert to null if empty to trigger the detection error
+        $userLat = is_numeric($userLat) ? (float) $userLat : null;
+        $userLong = is_numeric($userLong) ? (float) $userLong : null;
 
         $division = \App\Models\Division::find($divisionId);
         
-        // 0a. Geofencing Check
-        if ($division && $division->latitude && $division->longitude) {
-            if (!$userLat || !$userLong) {
-                throw new \Exception('Lokasi GPS tidak terdeteksi. Silakan aktifkan GPS dan izinkan akses lokasi.');
-            }
-
-            $distance = $this->calculateDistance($userLat, $userLong, $division->latitude, $division->longitude);
-            
-            if ($distance > ($division->radius + 10)) { // Beri toleransi extra 10 meter
-                throw new \Exception("Anda terlalu jauh dari lokasi eskul. jangan bolos yaaaa!");
-            }
-
-
-        }
         // 0. Holiday Check
         if (\App\Models\Holiday::where('date', now()->toDateString())->exists()) {
             throw new \Exception('Hari ini adalah hari libur, sistem absensi dinonaktifkan.');
         }
 
-        // 1. Check if code exists and belongs to division
-        $verificationCode = VerificationCode::where('code', $code)
-            ->where('division_id', $divisionId)
-            ->where('date', now()->toDateString())
-            ->where('is_active', true)
-            ->where('expires_at', '>', now())
-            ->first();
-
-        if (!$verificationCode) {
-            throw new \Exception('Kode verifikasi tidak valid, sudah non-aktif, atau kedaluwarsa.');
-        }
-
-        // 2. Time Window Check
-        // If code works by schedule, check start_at / expires_at
-        if ($verificationCode->schedule_id && $verificationCode->start_at && $verificationCode->expires_at) {
-            $now = now();
-            $startTime = $verificationCode->start_at->copy()->subMinutes(30);
-            $endTime = $verificationCode->expires_at->copy()->addMinutes(30);
-
-            if (!$now->between($startTime, $endTime)) {
-                throw new \Exception('Anda hanya bisa absen dalam rentang waktu jadwal (toleransi 30 menit).');
+        // 1. Geofencing Check (10 meter strict as per request)
+        if ($division && $division->latitude && $division->longitude) {
+            if (!$userLat || !$userLong) {
+                throw new \Exception('Lokasi GPS tidak terdeteksi. Silakan aktifkan GPS.');
             }
 
-            $schedule = $verificationCode->schedule;
-        } else {
-            // Legacy / Manual code fallback: Find schedule manually
-            // Only check "expires_at" for validity (done in query above), but if we want strict window:
+            $distance = $this->calculateDistance($userLat, $userLong, $division->latitude, $division->longitude);
             
-            $today = now()->format('l'); 
-            $schedule = Schedule::where('division_id', $divisionId)
-                ->where('day', $today)
+            if ($distance > ($division->radius + 5)) { // Beri toleransi minimal 5 meter
+                 throw new \Exception("Anda berada di luar area eskul, jangan bolos yaaa");
+            }
+        }
+
+        // 2. Fetch/Validate Code if not provided via QR
+        if (!$verificationCode) {
+            $verificationCode = VerificationCode::where('code', $code)
+                ->where('division_id', $divisionId)
+                ->where('date', now()->toDateString())
+                ->where('is_active', true)
+                ->where('expires_at', '>', now())
                 ->first();
 
-            // Perform strict check if schedule exists
-            if ($schedule) {
-                $now = now();
-                $startTime = Carbon::parse($schedule->start_time)->subMinutes(30);
-                $endTime = Carbon::parse($schedule->end_time)->addMinutes(30);
-
-                if (!$now->between($startTime, $endTime)) {
-                    throw new \Exception('Anda hanya bisa absen dalam rentang waktu jadwal (toleransi 30 menit).');
-                }
+            if (!$verificationCode) {
+                throw new \Exception('Kode verifikasi tidak valid atau kedaluwarsa.');
             }
         }
 
-        // 3. Duplicate Check: Check if any attendance exists for this user/division today
-        $exists = Attendance::where('user_id', $userId)
-            ->where('division_id', $divisionId)
+        // 3. Time Window Check
+        $now = now();
+        $startTime = $verificationCode->start_at ? $verificationCode->start_at->copy()->subMinutes(30) : now()->subMinutes(60);
+        $endTime = $verificationCode->expires_at ? $verificationCode->expires_at->copy()->addMinutes(30) : now()->addMinutes(60);
+
+        if (!$now->between($startTime, $endTime)) {
+            throw new \Exception('Sesi absensi belum dimulai atau sudah berakhir.');
+        }
+
+        // 4. SMART LOCK (Strict 1x per day total for the user)
+        $todayAttendance = Attendance::where('user_id', $userId)
             ->whereDate('created_at', now()->toDateString())
             ->exists();
 
-        if ($exists) {
-            throw new \Exception('Oops! Anda sudah absen hari ini (via QR/Kode). Tidak perlu absen double ya! ');
+        if ($todayAttendance) {
+            throw new \Exception('Smart Lock: Anda sudah melakukan absensi hari ini. Tidak diijinkan melakukan absensi lebih dari 1x sehari.');
         }
 
         return [
             'verification_code_id' => $verificationCode->id,
-            'schedule_id' => $schedule?->id ?? $verificationCode->schedule_id,
+            'schedule_id' => $verificationCode->schedule_id,
         ];
     }
 

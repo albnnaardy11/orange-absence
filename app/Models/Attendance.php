@@ -10,12 +10,12 @@ use Spatie\Activitylog\LogOptions;
 
 class Attendance extends Model
 {
-    use LogsActivity;
+    use LogsActivity, \App\Traits\LogsActivityWithMetadata;
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['status', 'is_approved'])
+            ->logOnly(['status', 'is_approved', 'user_id', 'division_id', 'schedule_id'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }

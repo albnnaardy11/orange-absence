@@ -15,10 +15,10 @@
             >
                 <x-slot name="heading">
                     <div class="flex flex-col gap-y-1">
-                        <span class="text-lg sm:text-xl font-black text-primary-600 dark:text-primary-500 tracking-tight leading-tight uppercase">
+                        <span class="text-xl font-black text-primary-600 dark:text-primary-500 tracking-tight leading-tight uppercase">
                             {{ $schedule->division->name }}
                         </span>
-                        <span class="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400">
+                        <span class="text-sm font-semibold text-gray-500 dark:text-gray-400">
                             {{ $schedule->day }}
                         </span>
                     </div>
@@ -40,26 +40,26 @@
 
                 <div class="space-y-8 pt-6 pb-4">
                     {{-- Row: Room --}}
-                    <div class="flex items-center gap-x-3 sm:gap-x-5">
-                        <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 ring-1 ring-primary-500/20">
-                            <x-heroicon-s-map-pin class="h-5 w-5 sm:h-6 sm:w-6 text-primary-600 dark:text-primary-400" />
+                    <div class="flex items-center gap-x-5">
+                        <div class="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 ring-1 ring-primary-500/20">
+                            <x-heroicon-s-map-pin class="h-6 w-6 text-primary-600 dark:text-primary-400" />
                         </div>
-                        <div class="flex flex-col min-w-0 flex-1">
-                            <span class="text-xs sm:text-sm font-bold text-gray-500 dark:text-gray-400 tracking-tight leading-none mb-1 sm:mb-1.5">Room</span>
-                            <span class="text-base sm:text-xl font-black text-gray-950 dark:text-white leading-tight truncate">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-bold text-gray-500 dark:text-gray-400 tracking-tight leading-none mb-1.5">Room</span>
+                            <span class="text-xl font-black text-gray-950 dark:text-white leading-tight">
                                 {{ $schedule->classroom ?? 'Lab PPLG' }}
                             </span>
                         </div>
                     </div>
 
                     {{-- Row: Time --}}
-                    <div class="flex items-center gap-x-3 sm:gap-x-5">
-                        <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 ring-1 ring-primary-500/20">
-                            <x-heroicon-s-clock class="h-5 w-5 sm:h-6 sm:w-6 text-primary-600 dark:text-primary-400" />
+                    <div class="flex items-center gap-x-5">
+                        <div class="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 ring-1 ring-primary-500/20">
+                            <x-heroicon-s-clock class="h-6 w-6 text-primary-600 dark:text-primary-400" />
                         </div>
-                        <div class="flex flex-col min-w-0 flex-1">
-                            <span class="text-xs sm:text-sm font-bold text-gray-500 dark:text-gray-400 tracking-tight leading-none mb-1 sm:mb-1.5">Time</span>
-                            <span class="text-base sm:text-xl font-black text-gray-950 dark:text-white leading-tight">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-bold text-gray-500 dark:text-gray-400 tracking-tight leading-none mb-1.5">Time</span>
+                            <span class="text-xl font-black text-gray-950 dark:text-white leading-tight">
                                 {{ $startTime->format('H:i') }} - {{ $endTime->format('H:i') }}
                             </span>
                         </div>
@@ -76,24 +76,26 @@
     </div>
 
     @if($this->getSchedules()->isEmpty())
-        <x-filament::section class="border-dashed py-8 sm:py-12">
-            <div class="flex flex-col items-center justify-center text-center px-4">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3 sm:mb-4 mx-auto shadow-inner ring-1 ring-gray-950/5 dark:ring-white/10">
-                    <x-filament::icon
-                        icon="heroicon-o-calendar"
-                        class="h-7 w-7 sm:h-8 sm:w-8 text-gray-400 dark:text-gray-500"
-                    />
-                </div>
-                <h3 class="text-lg sm:text-xl font-black text-gray-950 dark:text-white tracking-tight">No Schedules</h3>
-                <p class="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto font-medium">You are not registered in any division schedule today.</p>
+        <x-filament::section class="flex flex-col items-center justify-center py-16 text-center border-dashed">
+            <div class="w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center mb-4">
+                <x-filament::icon
+                    icon="heroicon-o-calendar"
+                    class="h-8 w-8 text-gray-300 dark:text-gray-600"
+                />
             </div>
+            <h3 class="text-xl font-black text-gray-950 dark:text-white tracking-tight">No Schedules</h3>
+            <p class="mt-1 text-sm text-gray-500 max-w-xs mx-auto font-medium">You are not registered in any division schedule today.</p>
         </x-filament::section>
     @endif
 
-    {{-- GPS Status Indicator --}}
-    <div id="gps-status" class="fixed top-16 sm:top-18 right-2 sm:right-4 z-50 flex items-center gap-x-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-500 opacity-0 translate-y-[-20px]">
-        <div class="h-2 w-2 rounded-full bg-red-500 animate-pulse" id="gps-dot"></div>
-        <span class="text-xs font-bold text-gray-600 dark:text-gray-300" id="gps-text">Mencari GPS...</span>
+    {{-- GPS Status Indicator (Positioned under the profile avatar) --}}
+    <div id="gps-status" class="fixed top-[5.75rem] right-4 flex items-center gap-x-2 px-3 py-1.5 rounded-full bg-white dark:bg-gray-900 shadow-lg opacity-0 transition-all duration-500 transform translate-y-[-10px]">
+        <div class="h-2 w-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" id="gps-dot"></div>
+        <span class="text-[10px] font-black text-gray-600 dark:text-gray-300 tracking-[0.1em] whitespace-nowrap" id="gps-text">SYNCING</span>
+        <div class="w-px h-3 bg-gray-200 dark:bg-white/20 mx-1"></div>
+        <button onclick="updateGPS(true)" class="p-1.5 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors group" title="Refresh Lokasi">
+            <x-filament::icon icon="heroicon-o-arrow-path" class="w-3.5 h-3.5 text-gray-400 group-hover:text-orange-500 transition-colors" />
+        </button>
     </div>
 
     <script>
@@ -110,49 +112,59 @@
             const text = document.getElementById('gps-text');
             
             if (!el) return;
-            el.classList.remove('opacity-0', 'translate-y-[-20px]');
+            el.classList.remove('opacity-0', 'translate-y-[-10px]');
             el.classList.add('opacity-100', 'translate-y-0');
 
             if (status === 'locked') {
                 dot.classList.remove('bg-red-500');
                 dot.classList.add('bg-green-500');
                 dot.classList.remove('animate-pulse');
-                text.innerText = 'GPS: OK';
+                dot.classList.add('shadow-[0_0_8px_#22c55e]');
+                text.innerText = 'GPS ON';
             } else if (status === 'error') {
                 dot.classList.add('bg-red-500');
-                text.innerText = 'GPS: Error';
+                text.innerText = 'GPS OFF';
             }
         }
 
-        // Monitoring
-        if (navigator.geolocation) {
+        function initGPS() {
+            if (!navigator.geolocation) {
+                updateGPSUI('error');
+                return;
+            }
+
             navigator.geolocation.watchPosition(
                 function(position) {
                     window.userLat = position.coords.latitude;
                     window.userLong = position.coords.longitude;
                     
-                    // Bulletproof: Save to Cookies
+                    // Save to local persistence
                     setCookie('user_lat', window.userLat);
                     setCookie('user_long', window.userLong);
-
+                    
                     updateGPSUI('locked');
-                    injectCoords();
+                    broadcastGPS();
                 },
                 function(error) {
                     console.error('GPS Error:', error.message);
                     updateGPSUI('error');
                 },
-                { enableHighAccuracy: true, maximumAge: 0 }
+                { 
+                    enableHighAccuracy: true, 
+                    maximumAge: 5000, 
+                    timeout: 10000 
+                }
             );
         }
 
-        function injectCoords() {
+        function broadcastGPS() {
             if (!window.userLat || !window.userLong) return;
             
             window.dispatchEvent(new CustomEvent('gps-updated', { 
                 detail: { lat: window.userLat, long: window.userLong } 
             }));
 
+            // Direct injection into any available inputs
             document.querySelectorAll('input').forEach(input => {
                 const name = input.getAttribute('name') || '';
                 const id = input.id || '';
@@ -167,17 +179,35 @@
             });
         }
 
+        function updateGPS(force = false) {
+            if (force) location.reload();
+            else initGPS();
+        }
+
+        // Start immediately when script loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initGPS);
+        } else {
+            // DOM already loaded, start immediately
+            initGPS();
+        }
+
+        // Also start on Livewire navigation (for SPA mode)
+        document.addEventListener('livewire:navigated', initGPS);
+
+        // Re-inject when modal opens
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
-                if (mutation.addedNodes.length) injectCoords();
+                if (mutation.addedNodes.length) {
+                    setTimeout(broadcastGPS, 100);
+                }
             });
         });
-
         observer.observe(document.body, { childList: true, subtree: true });
 
         document.addEventListener('mousedown', function(e) {
             if (e.target.innerText && e.target.innerText.includes('Check-in')) {
-                injectCoords();
+                broadcastGPS();
             }
         });
     </script>

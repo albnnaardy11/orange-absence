@@ -21,7 +21,6 @@ class ActiveCodeWidget extends Widget
 
     public static function canView(): bool
     {
-        // Visible to users who have divisions (Secretary/Admin)
         return Auth::check() && Auth::user()->hasAnyRole(['super_admin', 'secretary']);
     }
 
@@ -42,7 +41,7 @@ class ActiveCodeWidget extends Widget
             ->whereNotNull('schedule_id')
             ->with('division')
             ->get();
-            
+
         return [
             'codes' => $codes,
         ];

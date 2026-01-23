@@ -37,7 +37,7 @@ class DivisionForm
                                     ->helperText('Contoh: 106.816666'),
                                 TextInput::make('radius')
                                     ->numeric()
-                                    ->default(100)
+                                    ->default(10)
                                     ->suffix('Meter')
                                     ->helperText('Jarak maksimal member dari titik pusat.'),
 

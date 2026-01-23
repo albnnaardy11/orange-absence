@@ -10,12 +10,12 @@ use Spatie\Activitylog\LogOptions;
 
 class Division extends Model
 {
-    use LogsActivity;
+    use LogsActivity, \App\Traits\LogsActivityWithMetadata;
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'is_auto_generate'])
+            ->logOnly(['name', 'description', 'latitude', 'longitude', 'radius', 'is_auto_generate'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }

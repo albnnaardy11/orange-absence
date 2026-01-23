@@ -10,12 +10,12 @@ use Spatie\Activitylog\LogOptions;
 
 class Schedule extends Model
 {
-    use LogsActivity;
+    use LogsActivity, \App\Traits\LogsActivityWithMetadata;
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['day', 'start_time', 'end_time', 'status'])
+            ->logOnly(['day', 'start_time', 'end_time', 'status', 'division_id'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }

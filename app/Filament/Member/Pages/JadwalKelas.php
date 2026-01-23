@@ -27,14 +27,8 @@ class JadwalKelas extends Page
 
     protected static ?string $title = 'Class Schedule';
 
-    protected $schedules = null;
-
     public function getSchedules()
     {
-        if ($this->schedules !== null) {
-            return $this->schedules;
-        }
-
         $user = Auth::user();
         if (!$user) return collect();
 
@@ -44,7 +38,7 @@ class JadwalKelas extends Page
         $today = now()->format('l');
         $yesterday = now()->subDay()->format('l');
 
-        return $this->schedules = Schedule::whereIn('division_id', $divisionIds)
+        return Schedule::whereIn('division_id', $divisionIds)
             ->where('status', 'active')
             ->where(function ($query) use ($today, $yesterday, $now) {
                 // 1. Scheduled for Today
@@ -77,18 +71,17 @@ class JadwalKelas extends Page
     public function absenAction(): Action
     {
         return Action::make('absen')
-            ->label('Masukan Kode')
+            ->label('Check-in Now')
             ->color('primary')
             ->button()
             ->extraAttributes([
                 'class' => 'w-full justify-center shadow-sm font-bold',
+                'onclick' => 'if(!window.userLat) { alert("Tunggu sejenak! GPS sedang sinkronisasi. Pastikan indikasi di pojok kanan atas sudah HIJAU."); return false; }'
             ])
             ->form([
                 TextInput::make('code')
-                    ->label('Kode Verifikasi')
-                    ->placeholder('Contoh: 123456')
-                    ->required()
-                    ->numeric(),
+                    ->label('Attendance Code')
+                    ->required(),
                 Forms\Components\Hidden::make('user_lat')
                     ->extraAttributes([
                         'id' => 'user_lat',
@@ -108,8 +101,8 @@ class JadwalKelas extends Page
                 if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
                     $seconds = RateLimiter::availableIn($throttleKey);
                     Notification::make()
-                        ->title('Terlalu banyak percobaan')
-                        ->body("Tunggu {$seconds} detik lagi.")
+                        ->title('Too many attempts')
+                        ->body("Please wait {$seconds} seconds.")
                         ->danger()
                         ->send();
                     return;
@@ -121,7 +114,7 @@ class JadwalKelas extends Page
                 $schedule = Schedule::find($scheduleId);
 
                 if (!$schedule) {
-                    Notification::make()->title('Jadwal tidak ditemukan')->danger()->send();
+                    Notification::make()->title('Schedule not found')->danger()->send();
                     return;
                 }
 
@@ -140,7 +133,6 @@ class JadwalKelas extends Page
                         'verification_code_id' => $result['verification_code_id'],
                         'schedule_id' => $schedule->id,
                         'status' => 'hadir',
-                        'is_approved' => true, // Auto Approve for Verified Code
                         'latitude' => $data['user_lat'] ?? null,
                         'longitude' => $data['user_long'] ?? null,
                     ]);
@@ -155,11 +147,7 @@ class JadwalKelas extends Page
                         $cashLog->update(['attendance_id' => $attendance->id]);
                     }
 
-                    Notification::make()
-                        ->title('Absensi Berhasil!')
-                        ->body("Absen kode tercatat di {$schedule->division->name}")
-                        ->success()
-                        ->send();
+                    Notification::make()->title('Attendance successful!')->success()->send();
 
                 } catch (\Exception $e) {
                     Notification::make()->title($e->getMessage())->danger()->send();

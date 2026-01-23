@@ -11,12 +11,12 @@ use Spatie\Activitylog\LogOptions;
 
 class CashLog extends Model
 {
-    use LogsActivity;
+    use LogsActivity, \App\Traits\LogsActivityWithMetadata;
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['amount', 'status', 'date'])
+            ->logOnly(['amount', 'status', 'date', 'user_id', 'division_id', 'attendance_id'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }

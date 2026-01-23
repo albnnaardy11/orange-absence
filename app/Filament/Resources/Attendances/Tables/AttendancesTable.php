@@ -13,7 +13,6 @@ use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Builder;
 
 class AttendancesTable
 {
@@ -48,23 +47,9 @@ class AttendancesTable
                     ->size(40)
                     ->circular()
                     ->openUrlInNewTab(),
-                TextColumn::make('is_approved')
+                IconColumn::make('is_approved')
                     ->label('Approved')
-                    ->formatStateUsing(function ($state, Attendance $record) {
-                        // Hanya tampilkan status approval untuk izin/sakit
-                        if (in_array($record->status, ['izin', 'sakit'])) {
-                            return $state ? '✓ Disetujui' : 'Menunggu';
-                        }
-                        // Untuk hadir dan alfa, tidak perlu approval
-                        return '-';
-                    })
-                    ->badge()
-                    ->color(function ($state, Attendance $record) {
-                        if (in_array($record->status, ['izin', 'sakit'])) {
-                            return $state ? 'success' : 'warning';
-                        }
-                        return 'gray';
-                    })
+                    ->boolean()
                     ->sortable(),
             ])
             ->filters([
@@ -78,43 +63,67 @@ class AttendancesTable
                         'sakit' => 'Sakit',
                         'alfa' => 'Alfa',
                     ]),
-                SelectFilter::make('week')
-                    ->label('Minggu Ke')
-                    ->options(function () {
-                        $options = [];
-                        $startOfMonth = now()->startOfMonth();
-                        $endOfMonth = now()->endOfMonth();
-                        $currentDate = $startOfMonth->copy();
-                        
-                        $weekNumber = 1;
-                        while ($currentDate->lte($endOfMonth)) {
-                            $startOfWeek = $currentDate->copy()->startOfWeek();
-                            $endOfWeek = $currentDate->copy()->endOfWeek();
-                            
-                            $value = $startOfWeek->format('Y-m-d') . ',' . $endOfWeek->format('Y-m-d');
-                            $label = "Minggu ke-{$weekNumber} ({$startOfWeek->format('d M')} - {$endOfWeek->format('d M')})";
-                            
-                            $options[$value] = $label;
-                            
-                            $currentDate->addWeek();
-                            $weekNumber++;
-                        }
-                        
-                        return $options;
+                \Filament\Tables\Filters\Filter::make('attendance_period')
+                    ->form([
+                        \Filament\Forms\Components\Select::make('period_type')
+                            ->label('Periode')
+                            ->options([
+                                'this_week' => 'Minggu Ini',
+                                'last_week' => 'Minggu Lalu',
+                                'this_month' => 'Bulan Ini',
+                                'last_month' => 'Bulan Lalu',
+                                'custom_range' => 'Rentang Tanggal Custom',
+                                'all' => 'Semua Waktu',
+                            ])
+                            ->default('this_week'),
+                        \Filament\Schemas\Components\Grid::make(2)
+                            ->schema([
+                                \Filament\Forms\Components\DatePicker::make('from')
+                                    ->label('Dari')
+                                    ->visible(fn ($get) => $get('period_type') === 'custom_range'),
+                                \Filament\Forms\Components\DatePicker::make('until')
+                                    ->label('Sampai')
+                                    ->visible(fn ($get) => $get('period_type') === 'custom_range'),
+                            ]),
+                    ])
+                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
+                        return $query
+                            ->when(
+                                $data['period_type'] === 'this_week',
+                                fn ($q) => $q->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+                            )
+                            ->when(
+                                $data['period_type'] === 'last_week',
+                                fn ($q) => $q->whereBetween('created_at', [now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek()])
+                            )
+                            ->when(
+                                $data['period_type'] === 'this_month',
+                                fn ($q) => $q->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)
+                            )
+                            ->when(
+                                $data['period_type'] === 'last_month',
+                                fn ($q) => $q->whereMonth('created_at', now()->subMonth()->month)->whereYear('created_at', now()->subMonth()->year)
+                            )
+                            ->when(
+                                $data['period_type'] === 'custom_range',
+                                fn ($q) => $q
+                                    ->when($data['from'], fn ($q, $date) => $q->whereDate('created_at', '>=', $date))
+                                    ->when($data['until'], fn ($q, $date) => $q->whereDate('created_at', '<=', $date))
+                            );
                     })
-                    ->query(function (Builder $query, array $data) {
-                        if (!empty($data['value'])) {
-                            [$start, $end] = explode(',', $data['value']);
-                            $query->whereBetween('created_at', [
-                                \Carbon\Carbon::parse($start)->startOfDay(),
-                                \Carbon\Carbon::parse($end)->endOfDay()
-                            ]);
-                        }
+                    ->indicateUsing(function (array $data): ?string {
+                        if (!$data['period_type'] || $data['period_type'] === 'all') return null;
+                        
+                        $labels = [
+                            'this_week' => 'Minggu Ini',
+                            'last_week' => 'Minggu Lalu',
+                            'this_month' => 'Bulan Ini',
+                            'last_month' => 'Bulan Lalu',
+                            'custom_range' => 'Rentang Custom',
+                        ];
+                        
+                        return 'Periode: ' . ($labels[$data['period_type']] ?? $data['period_type']);
                     })
-                    ->default(function () {
-                        $now = now();
-                        return $now->startOfWeek()->format('Y-m-d') . ',' . $now->endOfWeek()->format('Y-m-d');
-                    }),
             ])
             ->headerActions([
                 Action::make('monthly_report')

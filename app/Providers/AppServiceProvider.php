@@ -3,9 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Attendance;
-use App\Models\CashLog;
 use App\Observers\AttendanceObserver;
-use App\Observers\CashLogObserver;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Event;
@@ -32,7 +30,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
         Attendance::observe(AttendanceObserver::class);
-        CashLog::observe(CashLogObserver::class);
+        \App\Models\Schedule::observe(\App\Observers\ScheduleObserver::class);
 
         // Track IP and Device in Activity Log
         LogBatch::startBatch();

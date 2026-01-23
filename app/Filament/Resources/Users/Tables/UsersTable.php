@@ -35,16 +35,55 @@ class UsersTable
                     })
                     ->badge()
                     ->color(fn (string $state): string => str_contains($state, 'Nunggak') ? 'danger' : 'success'),
+                TextColumn::make('points')
+                    ->label('Pts')
+                    ->sortable()
+                    ->badge()
+                    ->color('danger')
+                    ->visible(fn ($record) => $record && $record->points > 0),
+                \Filament\Tables\Columns\IconColumn::make('is_suspended')
+                    ->label('Suspended')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-lock-closed')
+                    ->falseIcon('heroicon-o-lock-open')
+                    ->color(fn (string $state): string => $state ? 'danger' : 'success')
+                    ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                \Filament\Tables\Filters\Filter::make('suspended')
+                    ->label('Suspended Members')
+                    ->query(fn (\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder => $query->where('is_suspended', true)),
                 //
             ])
             ->recordActions([
                 EditAction::make(),
+                \Filament\Actions\Action::make('reset_points')
+                    ->label('Reset')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->visible(fn ($record) => $record->points > 0 || $record->is_suspended)
+                    ->action(function ($record) {
+                        $record->update([
+                            'points' => 0,
+                            'is_suspended' => false,
+                        ]);
+                        
+                        \Filament\Notifications\Notification::make()
+                            ->title('Akun Telah Diaktifkan')
+                            ->body('Poin pelanggaran Anda telah direset dan akun Anda kini dapat digunakan kembali.')
+                            ->success()
+                            ->sendToDatabase($record);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Status Reset Successfully')
+                            ->success()
+                            ->send();
+                    }),
                 DeleteAction::make(),
             ])
             ->toolbarActions([

@@ -18,22 +18,18 @@ use Spatie\Activitylog\LogOptions;
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles, LogsActivity;
+    use HasFactory, Notifiable, HasRoles, LogsActivity, \App\Traits\LogsActivityWithMetadata;
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'email'])
+            ->logOnly(['name', 'email', 'points', 'is_suspended'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }
 
     public function canAccessPanel(Panel $panel): bool
     {
-        if (!$this->is_active) {
-            return false;
-        }
-
         if ($panel->getId() === 'admin') {
             return $this->hasAnyRole(['super_admin', 'secretary']);
         }
@@ -54,8 +50,8 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
-        'is_active',
-        'total_points',
+        'points',
+        'is_suspended',
         'last_login_at',
         'last_login_ip',
         'last_login_device',
@@ -71,21 +67,15 @@ class User extends Authenticatable implements FilamentUser
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    public function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'is_active' => 'boolean',
-            'total_points' => 'integer',
+            'is_suspended' => 'boolean',
+            'points' => 'integer',
         ];
     }
-
     public function divisions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Division::class);
@@ -99,10 +89,5 @@ class User extends Authenticatable implements FilamentUser
     public function cashLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(CashLog::class);
-    }
-
-    public function pointLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(PointLog::class);
     }
 }

@@ -3,94 +3,99 @@
 namespace App\Observers;
 
 use App\Models\Attendance;
-use App\Models\User;
-use Filament\Notifications\Notification;
+use App\Models\CashLog;
 
 class AttendanceObserver
 {
-    /**
-     * Handle the Attendance "created" event.
-     */
-    public function created(Attendance $attendance): void
+    public function creating(Attendance $attendance): void
     {
-        $user = $attendance->user;
-        if (!$user) {
-            return;
-        }
-
-        $points = 0;
-        $reason = '';
-
-        if ($attendance->status === 'alfa') {
-            $points = 10;
-            $reason = 'Absent (Alfa) on ' . $attendance->created_at->format('Y-m-d');
-        } elseif (in_array($attendance->status, ['izin', 'sakit'])) {
-            $points = 2;
-            $reason = ucfirst($attendance->status) . ' on ' . $attendance->created_at->format('Y-m-d');
-        }
-
-        if ($points > 0) {
-            $this->addPoints($user, $points, $reason);
-        }
+        $attendance->ip_address = request()->ip();
+        $attendance->user_agent = request()->userAgent();
     }
 
     /**
-     * Handle the Attendance "updated" event.
+     * Handle the Attendance "saved" event.
+     * This covers both created and updated events.
      */
-    public function updated(Attendance $attendance): void
+    public function saved(Attendance $attendance): void
     {
-        // Optional: Handle status changes if requirements evolve.
-        // Currently focused on new data as per instructions.
-    }
+        // Only proceed if status is 'hadir' (Present) or true (Verified)
+        if ($attendance->status === true || $attendance->status === 'hadir') {
+            // Check if this attendance is already linked
+            if ($attendance->cashLog()->exists()) {
+                return;
+            }
 
-    protected function addPoints(User $user, int $amount, string $reason): void
-    {
-        $user->increment('total_points', $amount);
-        
-        // Log points
-        $user->pointLogs()->create([
-            'amount' => $amount,
-            'reason' => $reason,
-        ]);
+            $today = now()->toDateString();
+            $startOfWeek = now()->startOfWeek()->toDateString();
+            $endOfWeek = now()->endOfWeek()->toDateString();
 
-        $this->checkThresholds($user);
-    }
+            // 1. Check if ANY Cash Log exists for this user in this week (linked or not)
+            $existingLogThisWeek = CashLog::where('user_id', $attendance->user_id)
+                ->whereBetween('date', [$startOfWeek, $endOfWeek])
+                ->first();
 
-    protected function checkThresholds(User $user): void
-    {
-        // Reload user to get fresh points
-        $user->refresh();
+            if ($existingLogThisWeek) {
+                // If it exists but isn't linked to an attendance yet, link it
+                if (!$existingLogThisWeek->attendance_id) {
+                    $existingLogThisWeek->update([
+                        'attendance_id' => $attendance->id,
+                        'division_id' => $attendance->division_id,
+                    ]);
+                }
+                // If it's already linked to another attendance, we do nothing (Member only pays once per week)
+            } else {
+                // 2. Create new dated CashLog if absolutely no bill exists for this week yet
+                CashLog::create([
+                    'attendance_id' => $attendance->id,
+                    'user_id' => $attendance->user_id,
+                    'division_id' => $attendance->division_id,
+                    'amount' => 5000,
+                    'status' => 'unpaid',
+                    'date' => $today,
+                ]);
+            }
+        }
 
-        if ($user->total_points >= 30 && $user->is_active) {
-            $user->update(['is_active' => false]);
+        // Point System & Auto-Lock Logic
+        // Status: 'alfa' (+10), 'izin' (+2), 'val_sakit' (+2)
+        // Adjust points based on status if it's a new record or status changed
+        if ($attendance->wasRecentlyCreated || $attendance->isDirty('status')) {
+            $pointsToAdd = 0;
             
-            Notification::make()
-                ->title('Account Locked')
-                ->body("User {$user->name} has been locked due to excessive points ({$user->total_points}).")
-                ->danger()
-                ->sendToDatabase(\App\Models\User::role(['super_admin', 'secretary'])->get());
+            // Normalize status to lowercase string
+            $status = is_string($attendance->status) ? strtolower($attendance->status) : '';
 
-            $this->sendExternalNotification($user, 'Account Locked');
-        } elseif ($user->total_points >= 20) {
-            Notification::make()
-                ->title('Point Warning')
-                ->body("User {$user->name} has reached {$user->total_points} points.")
-                ->warning()
-                ->sendToDatabase(\App\Models\User::role(['super_admin', 'secretary'])->get()); // Also notify user?
-                
-             // Notify the user themselves too
-             Notification::make()
-                ->title('Warning: High Points')
-                ->body("You have reached {$user->total_points} penalty points. Account will be locked at 30.")
-                ->warning()
-                ->sendToDatabase($user);
+            if ($status === 'alfa') {
+                $pointsToAdd = 10;
+            } elseif (in_array($status, ['izin', 'sakit', 'val_izin', 'val_sakit'])) {
+                $pointsToAdd = 2;
+            }
 
-            $this->sendExternalNotification($user, 'Point Warning');
+            if ($pointsToAdd > 0) {
+                 /** @var \App\Models\User $user */
+                $user = $attendance->user;
+                $user->increment('points', $pointsToAdd);
+
+                // Point notification
+                \Filament\Notifications\Notification::make()
+                    ->title('Poin Pelanggaran Bertambah')
+                    ->body("Poin Anda bertambah +{$pointsToAdd} (Status: " . strtoupper($status) . "). Total poin Anda sekarang: {$user->points}. Akun akan dikunci otomatis jika mencapai 30 poin!")
+                    ->warning()
+                    ->sendToDatabase($user);
+
+                // Auto-Suspension Check (Only for Members)
+                if ($user->hasRole('member') && $user->refresh()->points >= 30 && !$user->is_suspended) {
+                    $user->update(['is_suspended' => true]);
+                    
+                    \Filament\Notifications\Notification::make()
+                        ->title('Akun Ditangguhkan!')
+                        ->body('Akun Anda telah dikunci otomatis karena poin mencapai 30.')
+                        ->danger()
+                        ->persistent()
+                        ->sendToDatabase($user);
+                }
+            }
         }
-    }
-
-    protected function sendExternalNotification(User $user, string $type): void
-    {
-        // Placeholder for WhatsApp/Email integration
     }
 }

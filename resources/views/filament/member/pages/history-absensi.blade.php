@@ -1,53 +1,81 @@
 <x-filament-panels::page>
-    <div class="mb-6 sm:mb-8">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {{-- Card 1: Name --}}
-            <x-filament::section>
-                <div class="flex items-center gap-3 sm:gap-4">
-                    <div class="flex-shrink-0 p-2.5 sm:p-3 bg-blue-100 rounded-full dark:bg-blue-900/30">
-                        <x-filament::icon icon="heroicon-o-user" class="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <p class="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide">Nama Lengkap</p>
-                        <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white uppercase truncate">{{ auth()->user()->name }}</h3>
-                    </div>
-                </div>
-            </x-filament::section>
-
-            {{-- Card 2: Email --}}
-            <x-filament::section>
-                <div class="flex items-center gap-3 sm:gap-4">
-                    <div class="flex-shrink-0 p-2.5 sm:p-3 bg-amber-100 rounded-full dark:bg-amber-900/30">
-                        <x-filament::icon icon="heroicon-o-envelope" class="h-5 w-5 sm:h-6 sm:w-6 text-amber-600 dark:text-amber-400" />
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <p class="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide">Email</p>
-                        <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">{{ auth()->user()->email }}</h3>
-                    </div>
-                </div>
-            </x-filament::section>
-
-            {{-- Card 3: Divisions --}}
-            <x-filament::section class="sm:col-span-2 lg:col-span-1">
-                <div class="flex items-center gap-3 sm:gap-4">
-                    <div class="flex-shrink-0 p-2.5 sm:p-3 bg-indigo-100 rounded-full dark:bg-indigo-900/30">
-                        <x-filament::icon icon="heroicon-o-academic-cap" class="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600 dark:text-indigo-400" />
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <p class="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide">Divisi Saya</p>
-                        <div class="flex flex-wrap gap-1 mt-1">
-                            @forelse(auth()->user()->divisions as $division)
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300 uppercase">
-                                    {{ $division->name }}
-                                </span>
-                            @empty
-                                <span class="text-xs text-gray-400 italic">Belum bergabung divisi</span>
-                            @endforelse
+    <div class="mb-8">
+        @foreach($schedules as $schedule)
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4 mb-8 last:mb-0">
+                
+                {{-- Card 1: Division (Spans Full) --}}
+                <x-filament::section class="col-span-full">
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 bg-blue-100 rounded-full dark:bg-blue-900/30">
+                            <x-filament::icon icon="heroicon-o-book-open" class="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Division</p>
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white uppercase">{{ $schedule->division->name }}</h3>
                         </div>
                     </div>
-                </div>
+                </x-filament::section>
+
+                {{-- Card 2: Check-in Time --}}
+                <x-filament::section>
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 bg-amber-100 rounded-full dark:bg-amber-900/30">
+                            <x-filament::icon icon="heroicon-o-clock" class="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Check-in Time</p>
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }}</h3>
+                        </div>
+                    </div>
+                </x-filament::section>
+
+                {{-- Card 3: Check-out Time --}}
+                <x-filament::section>
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 bg-rose-100 rounded-full dark:bg-rose-900/30">
+                            <x-filament::icon icon="heroicon-o-clock" class="h-6 w-6 text-rose-600 dark:text-rose-400" />
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Check-out Time</p>
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}</h3>
+                        </div>
+                    </div>
+                </x-filament::section>
+
+                {{-- Card 4: Room --}}
+                <x-filament::section>
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 bg-orange-100 rounded-full dark:bg-orange-900/30">
+                            <x-filament::icon icon="heroicon-o-home" class="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Room</p>
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white truncate">{{ $schedule->classroom ?? '-' }}</h3>
+                        </div>
+                    </div>
+                </x-filament::section>
+
+                {{-- Card 5: Day --}}
+                <x-filament::section>
+                    <div class="flex items-center gap-4">
+                        <div class="p-3 bg-indigo-100 rounded-full dark:bg-indigo-900/30">
+                            <x-filament::icon icon="heroicon-o-calendar" class="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Day</p>
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ $schedule->day }}</h3>
+                        </div>
+                    </div>
+                </x-filament::section>
+
+            </div>
+        @endforeach
+
+        @if($schedules->isEmpty())
+            <x-filament::section class="text-center py-6">
+                <p class="text-gray-500">No active schedules found.</p>
             </x-filament::section>
-        </div>
+        @endif
     </div>
 
     {{ $this->table }}

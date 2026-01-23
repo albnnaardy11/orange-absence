@@ -27,7 +27,7 @@ class HistoryAbsensi extends Page implements HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->query(Attendance::query()->where('user_id', Auth::id())->with(['division', 'schedule']))
+            ->query(Attendance::query()->where('user_id', Auth::id()))
             ->columns([
                 TextColumn::make('created_at')
                     ->label('Date')
@@ -58,5 +58,41 @@ class HistoryAbsensi extends Page implements HasTable
             ->defaultSort('created_at', 'desc');
     }
 
-    // Simplified class: View data for schedules is no longer needed since we show personal info.
+    public function getViewData(): array
+    {
+        $user = Auth::user();
+        
+        $allDivisionIds = \Illuminate\Support\Facades\DB::table('division_user')
+            ->where('user_id', $user->id)
+            ->pluck('division_id')
+            ->toArray();
+            
+        $attendedDivisionIds = \App\Models\Attendance::where('user_id', $user->id)
+            ->pluck('division_id')
+            ->unique()
+            ->toArray();
+            
+        $allDivisionIds = array_unique(array_merge($allDivisionIds, $attendedDivisionIds));
+
+        $schedules = \App\Models\Schedule::query()
+            ->with(['division.users' => function($query) {
+                // Try to find users with secretary role in this division
+                // Note: role is global in Spatie, so we just get users who 'have' the role
+            }])
+            ->whereIn('division_id', $allDivisionIds)
+            ->where('status', 'active')
+            ->get();
+
+        return [
+            'schedules' => $schedules,
+        ];
+    }
+
+    public function getSecretary( \App\Models\Division $division)
+    {
+        // Find a user in this division who has the 'secretary' role
+        return $division->users()
+            ->role('secretary')
+            ->first()?->name ?? 'Lecturer';
+    }
 }

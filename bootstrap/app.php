@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'suspended' => \App\Http\Middleware\CheckSuspended::class,
         ]);
         $middleware->redirectTo(
             guests: '/member/login',
@@ -22,7 +23,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'user_lat',
             'user_long',
         ]);
-        $middleware->append(\App\Http\Middleware\CheckAccountStatus::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
