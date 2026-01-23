@@ -16,7 +16,7 @@ class DivisionResource extends Resource
 {
     protected static ?string $model = Division::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-office-2';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-building-office-2';
 
     protected static string | \UnitEnum | null $navigationGroup = 'Master Data';
 
@@ -46,3 +46,4 @@ class DivisionResource extends Resource
         ];
     }
 }
+

@@ -17,7 +17,7 @@ class DivisionMemberResource extends Resource
 
     protected static ?string $label = 'Division Member';
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-user-group';
 
     protected static ?string $navigationLabel = 'Division Members';
 
@@ -101,3 +101,4 @@ class DivisionMemberResource extends Resource
         ];
     }
 }
+

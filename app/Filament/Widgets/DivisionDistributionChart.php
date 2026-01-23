@@ -62,3 +62,4 @@ class DivisionDistributionChart extends ChartWidget
         return 'bar';
     }
 }
+

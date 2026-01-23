@@ -17,3 +17,4 @@ class EditAttendance extends EditRecord
         ];
     }
 }
+

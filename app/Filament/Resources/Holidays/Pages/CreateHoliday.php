@@ -9,3 +9,4 @@ class CreateHoliday extends CreateRecord
 {
     protected static string $resource = HolidayResource::class;
 }
+

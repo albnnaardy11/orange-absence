@@ -37,3 +37,4 @@ class DebtorsTableWidget extends BaseWidget
             ->paginated(false);
     }
 }
+

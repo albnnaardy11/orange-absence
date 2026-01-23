@@ -96,3 +96,4 @@ class HistoryAbsensi extends Page implements HasTable
             ->first()?->name ?? 'Lecturer';
     }
 }
+

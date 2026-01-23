@@ -114,3 +114,4 @@ class DivisionCodesWidget extends BaseWidget
             ->paginated(false);
     }
 }
+

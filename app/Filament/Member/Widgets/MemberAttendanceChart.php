@@ -52,3 +52,4 @@ class MemberAttendanceChart extends ChartWidget
         return 'doughnut';
     }
 }
+

@@ -9,3 +9,4 @@ class EditSuspendedMember extends EditRecord
 {
     protected static string $resource = SuspendedMemberResource::class;
 }
+

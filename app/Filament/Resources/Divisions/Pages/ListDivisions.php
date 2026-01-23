@@ -17,3 +17,4 @@ class ListDivisions extends ListRecords
         ];
     }
 }
+

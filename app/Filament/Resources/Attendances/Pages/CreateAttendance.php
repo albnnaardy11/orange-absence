@@ -10,3 +10,4 @@ class CreateAttendance extends CreateRecord
 {
     protected static string $resource = AttendanceResource::class;
 }
+

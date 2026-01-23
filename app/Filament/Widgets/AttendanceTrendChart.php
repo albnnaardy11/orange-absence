@@ -54,3 +54,4 @@ class AttendanceTrendChart extends ChartWidget
         return 'line';
     }
 }
+

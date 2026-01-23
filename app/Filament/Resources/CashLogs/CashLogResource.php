@@ -16,7 +16,7 @@ class CashLogResource extends Resource
 {
     protected static ?string $model = CashLog::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-banknotes';
 
     protected static string | \UnitEnum | null $navigationGroup = 'Absence Management';
 
@@ -46,3 +46,4 @@ class CashLogResource extends Resource
         ];
     }
 }
+

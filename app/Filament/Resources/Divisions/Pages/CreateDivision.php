@@ -9,3 +9,4 @@ class CreateDivision extends CreateRecord
 {
     protected static string $resource = DivisionResource::class;
 }
+

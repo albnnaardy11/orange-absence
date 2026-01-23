@@ -9,3 +9,4 @@ class ListSuspendedMembers extends ListRecords
 {
     protected static string $resource = SuspendedMemberResource::class;
 }
+

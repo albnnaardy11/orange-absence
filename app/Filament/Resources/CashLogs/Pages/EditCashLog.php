@@ -17,3 +17,4 @@ class EditCashLog extends EditRecord
         ];
     }
 }
+

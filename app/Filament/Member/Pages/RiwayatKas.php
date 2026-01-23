@@ -46,3 +46,4 @@ class RiwayatKas extends Page implements HasTable
             ]);
     }
 }
+

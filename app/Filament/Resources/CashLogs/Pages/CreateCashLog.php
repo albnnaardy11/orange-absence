@@ -9,3 +9,4 @@ class CreateCashLog extends CreateRecord
 {
     protected static string $resource = CashLogResource::class;
 }
+

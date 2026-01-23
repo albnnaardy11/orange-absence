@@ -46,3 +46,4 @@ class MemberStatsWidget extends BaseWidget
         ];
     }
 }
+

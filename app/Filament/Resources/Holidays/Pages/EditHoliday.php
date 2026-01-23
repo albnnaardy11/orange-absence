@@ -17,3 +17,4 @@ class EditHoliday extends EditRecord
         ];
     }
 }
+

@@ -17,3 +17,4 @@ class ListHolidays extends ListRecords
         ];
     }
 }
+

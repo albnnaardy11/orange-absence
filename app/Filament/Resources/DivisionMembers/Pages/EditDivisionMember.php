@@ -17,3 +17,4 @@ class EditDivisionMember extends EditRecord
         ];
     }
 }
+

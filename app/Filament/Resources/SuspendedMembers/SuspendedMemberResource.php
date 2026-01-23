@@ -19,9 +19,9 @@ class SuspendedMemberResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-lock-closed';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-lock-closed';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'User Management';
+    protected static string | \UnitEnum | null $navigationGroup = 'User Management';
 
     protected static ?string $slug = 'suspended-members';
 
@@ -109,3 +109,4 @@ class SuspendedMemberResource extends Resource
         ];
     }
 }
+

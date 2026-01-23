@@ -17,3 +17,4 @@ class EditSchedule extends EditRecord
         ];
     }
 }
+

@@ -35,3 +35,4 @@ class PassiveMembersWidget extends BaseWidget
             ]);
     }
 }
+

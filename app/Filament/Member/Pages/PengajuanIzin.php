@@ -96,3 +96,4 @@ class PengajuanIzin extends Page implements HasForms
         $this->form->fill();
     }
 }
+

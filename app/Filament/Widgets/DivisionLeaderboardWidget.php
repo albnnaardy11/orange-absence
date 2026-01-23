@@ -58,3 +58,4 @@ class DivisionLeaderboardWidget extends BaseWidget
             ->defaultSort('name');
     }
 }
+

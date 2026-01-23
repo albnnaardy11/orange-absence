@@ -94,3 +94,4 @@ class LiveAttendance extends Page implements HasForms
         $this->dispatch('qr-refreshed');
     }
 }
+

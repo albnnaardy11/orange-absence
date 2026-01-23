@@ -26,3 +26,4 @@ class ListCashLogs extends ListRecords
         ];
     }
 }
+

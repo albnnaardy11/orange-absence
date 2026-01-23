@@ -16,7 +16,7 @@ class AttendanceResource extends Resource
 {
     protected static ?string $model = Attendance::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-check';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-clipboard-document-check';
 
     protected static string | \UnitEnum | null $navigationGroup = 'Absence Management';
 
@@ -57,3 +57,4 @@ class AttendanceResource extends Resource
         ];
     }
 }
+

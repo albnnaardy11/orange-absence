@@ -102,3 +102,4 @@ class ListAttendances extends ListRecords
         ];
     }
 }
+

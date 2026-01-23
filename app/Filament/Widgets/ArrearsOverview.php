@@ -29,3 +29,4 @@ class ArrearsOverview extends BaseWidget
         ];
     }
 }
+

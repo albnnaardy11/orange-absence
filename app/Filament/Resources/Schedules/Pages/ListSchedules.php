@@ -17,3 +17,4 @@ class ListSchedules extends ListRecords
         ];
     }
 }
+

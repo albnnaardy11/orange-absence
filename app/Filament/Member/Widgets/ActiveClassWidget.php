@@ -55,3 +55,4 @@ class ActiveClassWidget extends Widget
             ->first();
     }
 }
+

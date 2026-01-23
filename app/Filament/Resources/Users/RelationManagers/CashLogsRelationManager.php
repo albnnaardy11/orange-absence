@@ -71,3 +71,4 @@ class CashLogsRelationManager extends RelationManager
             ]);
     }
 }
+

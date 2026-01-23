@@ -30,3 +30,4 @@ class EditProfile extends BaseEditProfile
             ]);
     }
 }
+
