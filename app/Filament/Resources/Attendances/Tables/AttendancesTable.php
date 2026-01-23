@@ -47,17 +47,23 @@ class AttendancesTable
                     ->size(40)
                     ->circular()
                     ->openUrlInNewTab(),
-                IconColumn::make('is_approved')
-                    ->label('Approved')
-                    ->icon(fn (Attendance $record): string => match (true) {
-                        $record->status === 'hadir' => 'heroicon-o-minus',
-                        $record->is_approved => 'heroicon-o-check-circle',
-                        default => 'heroicon-o-x-circle',
+                TextColumn::make('is_approved')
+                    ->label('Verification')
+                    ->badge()
+                    ->getStateUsing(fn (Attendance $record): string => match (true) {
+                        $record->status === 'hadir' => 'Hadir',
+                        $record->is_approved => 'Approved',
+                        default => 'Waiting',
                     })
                     ->color(fn (Attendance $record): string => match (true) {
-                        $record->status === 'hadir' => 'gray',
+                        $record->status === 'hadir' => 'success',
                         $record->is_approved => 'success',
                         default => 'danger',
+                    })
+                    ->icon(fn (Attendance $record): string => match (true) {
+                        $record->status === 'hadir' => 'heroicon-m-minus-small',
+                        $record->is_approved => 'heroicon-m-check-badge',
+                        default => 'heroicon-m-clock',
                     })
                     ->sortable(),
             ])
