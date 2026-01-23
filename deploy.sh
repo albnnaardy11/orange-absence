@@ -126,7 +126,7 @@ php artisan view:cache
 php artisan config:cache
 php artisan route:cache
 # php artisan livewire:discover # Removed: Auto-discovery in Livewire v3
-php artisan filament:cache-components 2>/dev/null || true
+# php artisan filament:cache-components 2>/dev/null || true
 php artisan icons:cache 2>/dev/null || true
 
 # 11. Queue Table Setup (for cPanel without Redis)
