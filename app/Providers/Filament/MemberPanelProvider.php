@@ -20,7 +20,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Navigation\NavigationGroup;
 
-use App\Filament\Pages\Auth\Login;
+
 
 class MemberPanelProvider extends PanelProvider
 {
@@ -29,7 +29,7 @@ class MemberPanelProvider extends PanelProvider
         return $panel
             ->id('member')
             ->path('member')
-            ->login(Login::class)
+            ->login()
             ->profile(\App\Filament\Member\Pages\Auth\EditProfile::class)
 
             ->brandName('ABSEN ORANGE')

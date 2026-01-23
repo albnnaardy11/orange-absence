@@ -24,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
             \Filament\Auth\Http\Responses\Contracts\LogoutResponse::class,
             \App\Http\Responses\LogoutResponse::class
         );
+
+        // Force register Filament Login component to fix resolution issues
+        \Livewire\Livewire::component('filament.auth.pages.login', \Filament\Auth\Pages\Login::class);
     }
 
     public function boot(): void
