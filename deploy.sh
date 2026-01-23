@@ -22,6 +22,8 @@ echo -e "${YELLOW}🧹 Pre-flight: Nuking bootstrap cache...${NC}"
 rm -f bootstrap/cache/config.php
 rm -f bootstrap/cache/services.php
 rm -f bootstrap/cache/packages.php
+rm -f bootstrap/cache/filament_components.php
+rm -f bootstrap/cache/livewire-components.php
 
 # Detect if this is first-time setup
 if [ ! -f ".env" ]; then
