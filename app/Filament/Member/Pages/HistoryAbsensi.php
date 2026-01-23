@@ -8,7 +8,10 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use App\Models\Attendance;
+use App\Models\Schedule;
+use App\Models\Division;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class HistoryAbsensi extends Page implements HasTable
 {
@@ -62,19 +65,19 @@ class HistoryAbsensi extends Page implements HasTable
     {
         $user = Auth::user();
         
-        $allDivisionIds = \Illuminate\Support\Facades\DB::table('division_user')
+        $allDivisionIds = DB::table('division_user')
             ->where('user_id', $user->id)
             ->pluck('division_id')
             ->toArray();
             
-        $attendedDivisionIds = \App\Models\Attendance::where('user_id', $user->id)
+        $attendedDivisionIds = Attendance::where('user_id', $user->id)
             ->pluck('division_id')
             ->unique()
             ->toArray();
             
         $allDivisionIds = array_unique(array_merge($allDivisionIds, $attendedDivisionIds));
 
-        $schedules = \App\Models\Schedule::query()
+        $schedules = Schedule::query()
             ->with(['division.users' => function($query) {
                 // Try to find users with secretary role in this division
                 // Note: role is global in Spatie, so we just get users who 'have' the role
@@ -88,7 +91,7 @@ class HistoryAbsensi extends Page implements HasTable
         ];
     }
 
-    public function getSecretary( \App\Models\Division $division)
+    public function getSecretary(Division $division)
     {
         // Find a user in this division who has the 'secretary' role
         return $division->users()
