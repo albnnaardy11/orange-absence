@@ -58,6 +58,9 @@ class AppServiceProvider extends ServiceProvider
         
         // Ensure Database Notifications is mapped
         \Livewire\Livewire::component('filament.livewire.database-notifications', \Filament\Notifications\Livewire\DatabaseNotifications::class);
+        
+        // Ensure Core Notifications (Toasts) is mapped
+        \Livewire\Livewire::component('filament.livewire.notifications', \Filament\Notifications\Livewire\Notifications::class);
     }
 
     public function boot(): void
