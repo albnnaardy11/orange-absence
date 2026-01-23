@@ -119,26 +119,27 @@ find storage -type d -exec chmod 755 {} \;
 # 10. Production Optimization & Recovery
 echo -e "${GREEN}⚡ Optimizing for production...${NC}"
 # Clear everything first to fix "ComponentNotFound" errors
-php artisan filament:optimize-clear
 php artisan optimize:clear
+php artisan filament:optimize-clear
 php artisan view:clear
-php artisan view:cache
 
-# Re-cache specific components safely
+# Re-cache everything safely
 php artisan config:cache
 php artisan route:cache
-# php artisan livewire:discover # Removed: Auto-discovery in Livewire v3
-# php artisan filament:cache-components 2>/dev/null || true
+php artisan view:cache
 php artisan icons:cache 2>/dev/null || true
 
-# 11. Queue Table Setup (for cPanel without Redis)
-echo -e "${GREEN}📋 Ensuring queue table exists...${NC}"
-php artisan queue:table 2>/dev/null || true
-php artisan migrate --force
+# 11. Symlink Self-Correction (Critical for cPanel)
+echo -e "${GREEN}🔗 Fixing storage symlink (Absolute Path Fix)...${NC}"
+rm -rf public/storage
+# Get absolute path dynamically
+USER_HOME=$(eval echo "~")
+ln -s "$USER_HOME/orange-absence/storage/app/public" "$(pwd)/public/storage" 2>/dev/null || php artisan storage:link --force
 
-# 12. Clear Application Cache (Final Sweep)
-echo -e "${GREEN}🧹 Final cache sweep...${NC}"
+# 12. Queue Table & Final Sweep
+echo -e "${GREEN}🧹 Final cleanup...${NC}"
 php artisan cache:clear
+php artisan migrate --force
 
 # 13. Test Database Connection
 echo -e "${GREEN}🔌 Testing database connection...${NC}"

@@ -49,7 +49,16 @@ class AttendancesTable
                     ->openUrlInNewTab(),
                 IconColumn::make('is_approved')
                     ->label('Approved')
-                    ->boolean()
+                    ->icon(fn (Attendance $record): string => match (true) {
+                        $record->status === 'hadir' => 'heroicon-o-minus',
+                        $record->is_approved => 'heroicon-o-check-circle',
+                        default => 'heroicon-o-x-circle',
+                    })
+                    ->color(fn (Attendance $record): string => match (true) {
+                        $record->status === 'hadir' => 'gray',
+                        $record->is_approved => 'success',
+                        default => 'danger',
+                    })
                     ->sortable(),
             ])
             ->filters([
