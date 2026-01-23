@@ -8,7 +8,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Schemas\Schema;
 use Filament\Forms;
 use Filament\Notifications\Notification;
-use Filament\Notifications\Actions\Action as NotificationAction;
+use Filament\Actions\Action as NotificationAction;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 
