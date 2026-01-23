@@ -15,27 +15,18 @@ class CheckSuspended
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // 1. Always allow Login, Logout, and Portal routes to prevent lockouts/redirect loops
+        if ($request->is('admin/login*') || 
+            $request->is('member/login*') || 
+            $request->is('*logout*') || 
+            $request->is('/') || 
+            $request->is('account-suspended')) {
+            return $next($request);
+        }
+
+        // 2. If authenticated and suspended, block access to everything else
         if (auth()->check() && auth()->user()->is_suspended) {
-            // Ignore for the portal/root path
-            if ($request->is('/')) {
-                return $next($request);
-            }
-
-            // Allow logout requests to proceed
-            if ($request->is('*logout*') || $request->isMethod('POST')) {
-                // We actually want to allow POST logout specifically.
-                // But better check the path precisely if possible.
-            }
-            
-            // Refined: Allow if it's a logout path
-            if (str_contains($request->path(), 'logout')) {
-                return $next($request);
-            }
-
-            // Only redirect if not already on the suspended page
-            if (!$request->is('account-suspended')) {
-                return response()->view('errors.account-suspended', [], 403);
-            }
+            return response()->view('errors.account-suspended', [], 403);
         }
 
         return $next($request);
