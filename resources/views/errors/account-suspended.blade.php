@@ -34,15 +34,7 @@
         </div>
 
         <div class="mt-10 flex flex-col gap-3">
-            @php
-                $logoutUrl = '/logout';
-                if (str_contains(request()->url(), 'admin')) {
-                    $logoutUrl = route('filament.admin.auth.logout');
-                } elseif (str_contains(request()->url(), 'member')) {
-                    $logoutUrl = route('filament.member.auth.logout');
-                }
-            @endphp
-            <form action="{{ $logoutUrl }}" method="POST">
+            <form action="{{ url('/logout') }}" method="POST">
                 @csrf
                 <button type="submit" class="w-full py-4 bg-[#1e293b] text-white rounded-2xl font-bold hover:bg-black transition-all shadow-lg text-center">
                     Kembali & Keluar

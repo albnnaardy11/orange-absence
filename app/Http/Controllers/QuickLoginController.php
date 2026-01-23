@@ -15,6 +15,11 @@ class QuickLoginController extends Controller
         // If already logged in, redirect to respective dashboard
         if (Auth::check()) {
             $user = Auth::user();
+            
+            if ($user->is_suspended) {
+                return response()->view('errors.account-suspended', [], 403);
+            }
+
             if ($user->hasAnyRole(['super_admin', 'secretary'])) {
                 return redirect('/admin');
             }

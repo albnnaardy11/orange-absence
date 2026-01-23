@@ -21,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
             \App\Http\Responses\LoginResponse::class
         );
         $this->app->singleton(
+            \Filament\Auth\Http\Responses\Contracts\LogoutResponse::class,
             \App\Http\Responses\LogoutResponse::class
         );
 

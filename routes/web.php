@@ -13,4 +13,11 @@ Route::get('/login', function () {
     return redirect()->to('/admin/login');
 })->name('login');
 
+Route::post('/logout', function () {
+    Auth::logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect('/');
+})->name('logout');
+
 

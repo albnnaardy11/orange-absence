@@ -16,6 +16,17 @@ class CheckSuspended
     public function handle(Request $request, Closure $next): Response
     {
         if (auth()->check() && auth()->user()->is_suspended) {
+            // Allow logout requests to proceed
+            if ($request->is('*logout*') || $request->isMethod('POST')) {
+                // We actually want to allow POST logout specifically.
+                // But better check the path precisely if possible.
+            }
+            
+            // Refined: Allow if it's a logout path
+            if (str_contains($request->path(), 'logout')) {
+                return $next($request);
+            }
+
             // Only redirect if not already on the suspended page
             if (!$request->is('account-suspended')) {
                 return response()->view('errors.account-suspended', [], 403);
