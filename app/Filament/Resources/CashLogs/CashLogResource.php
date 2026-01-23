@@ -9,7 +9,7 @@ use App\Filament\Resources\CashLogs\Schemas\CashLogForm;
 use App\Filament\Resources\CashLogs\Tables\CashLogsTable;
 use App\Models\CashLog;
 use Filament\Resources\Resource;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 
 class CashLogResource extends Resource
@@ -20,9 +20,9 @@ class CashLogResource extends Resource
 
     protected static string | \UnitEnum | null $navigationGroup = 'Absence Management';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return CashLogForm::configure($form);
+        return CashLogForm::configure($schema);
     }
 
     public static function table(Table $table): Table

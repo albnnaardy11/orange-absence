@@ -9,7 +9,7 @@ use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\Tables\UsersTable;
 use App\Models\User;
 use Filament\Resources\Resource;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use App\Filament\Resources\Users\RelationManagers;
 
@@ -21,9 +21,9 @@ class UserResource extends Resource
 
     protected static string | \UnitEnum | null $navigationGroup = 'User Management';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return UserForm::configure($form);
+        return UserForm::configure($schema);
     }
 
     public static function table(Table $table): Table

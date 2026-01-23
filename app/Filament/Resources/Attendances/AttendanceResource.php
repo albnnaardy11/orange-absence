@@ -7,7 +7,7 @@ use App\Filament\Resources\Attendances\Schemas\AttendanceForm;
 use App\Filament\Resources\Attendances\Tables\AttendancesTable;
 use App\Models\Attendance;
 use Filament\Resources\Resource;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -20,9 +20,9 @@ class AttendanceResource extends Resource
 
     protected static string | \UnitEnum | null $navigationGroup = 'Absence Management';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return AttendanceForm::configure($form);
+        return AttendanceForm::configure($schema);
     }
 
     public static function table(Table $table): Table

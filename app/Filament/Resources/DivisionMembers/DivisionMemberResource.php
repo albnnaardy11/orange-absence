@@ -4,7 +4,7 @@ namespace App\Filament\Resources\DivisionMembers;
 
 use App\Filament\Resources\DivisionMembers\Pages;
 use App\Models\User;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -30,9 +30,9 @@ class DivisionMemberResource extends Resource
             ->whereHas('roles', fn ($query) => $query->where('name', 'member'));
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->components([
                 Forms\Components\TextInput::make('name')
                     ->label('Name')

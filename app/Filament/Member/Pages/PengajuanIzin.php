@@ -5,7 +5,7 @@ namespace App\Filament\Member\Pages;
 use App\Models\Attendance;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -34,9 +34,9 @@ class PengajuanIzin extends Page implements HasForms
         $this->form->fill();
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->components([
                 Forms\Components\Select::make('division_id')
                     ->label('Pilih Divisi')

@@ -9,7 +9,7 @@ use App\Filament\Resources\Schedules\Schemas\ScheduleForm;
 use App\Filament\Resources\Schedules\Tables\SchedulesTable;
 use App\Models\Schedule;
 use Filament\Resources\Resource;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 
 class ScheduleResource extends Resource
@@ -20,9 +20,9 @@ class ScheduleResource extends Resource
 
     protected static string | \UnitEnum | null $navigationGroup = 'Master Data';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return ScheduleForm::configure($form);
+        return ScheduleForm::configure($schema);
     }
 
     public static function table(Table $table): Table
