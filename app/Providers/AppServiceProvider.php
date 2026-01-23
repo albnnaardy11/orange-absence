@@ -55,6 +55,9 @@ class AppServiceProvider extends ServiceProvider
         
         // Ensure Vendor Login is also mapped
         \Livewire\Livewire::component('filament.auth.pages.login', \Filament\Auth\Pages\Login::class);
+        
+        // Ensure Database Notifications is mapped
+        \Livewire\Livewire::component('filament.livewire.database-notifications', \Filament\Notifications\Livewire\DatabaseNotifications::class);
     }
 
     public function boot(): void
