@@ -180,7 +180,7 @@
                 <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                 <span>Status: Online</span>
             </div>
-            <p class="text-gray-600 text-sm mt-6 font-light opacity-50">&copy; {{ date('Y') }} Orange Absence. All rights reserved.</p>
+            <p class="text-gray-600 text-sm mt-6 font-light opacity-50">&copy; {{ date('Y') }} Ardy Albanna | Orange Absence. All rights reserved</p>
         </footer>
     </div>
 </body>

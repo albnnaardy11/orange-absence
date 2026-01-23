@@ -50,7 +50,7 @@ fi
 PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
 echo -e "${GREEN}🐘 PHP Version: $PHP_VERSION${NC}"
 
-if (( $(echo "$PHP_VERSION < 8.2" | bc -l) )); then
+if php -r "exit(version_compare('$PHP_VERSION', '8.2', '<') ? 0 : 1);"; then
     echo -e "${RED}❌ PHP 8.2 or higher required!${NC}"
     echo "   Please change PHP version in cPanel"
     exit 1
