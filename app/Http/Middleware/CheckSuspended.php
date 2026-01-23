@@ -16,6 +16,11 @@ class CheckSuspended
     public function handle(Request $request, Closure $next): Response
     {
         if (auth()->check() && auth()->user()->is_suspended) {
+            // Ignore for the portal/root path
+            if ($request->is('/')) {
+                return $next($request);
+            }
+
             // Allow logout requests to proceed
             if ($request->is('*logout*') || $request->isMethod('POST')) {
                 // We actually want to allow POST logout specifically.

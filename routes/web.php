@@ -20,4 +20,19 @@ Route::post('/logout', function () {
     return redirect('/');
 })->name('logout');
 
+// GET Logout for Suspended and general fallback to avoid 419 errors
+Route::get('/logout-suspended', function () {
+    Auth::logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect('/');
+});
+
+Route::get('/logout', function () {
+    Auth::logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect('/');
+});
+
 

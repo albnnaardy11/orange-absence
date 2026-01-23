@@ -34,12 +34,12 @@
         </div>
 
         <div class="mt-10 flex flex-col gap-3">
-            <form action="{{ url('/logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="w-full py-4 bg-[#1e293b] text-white rounded-2xl font-bold hover:bg-black transition-all shadow-lg text-center">
-                    Kembali & Keluar
-                </button>
-            </form>
+            <a href="{{ url('/logout-suspended') }}" class="w-full py-4 bg-[#1e293b] text-white rounded-2xl font-bold hover:bg-black transition-all shadow-lg text-center">
+                Kembali ke Portal & Keluar
+            </a>
+            <a href="{{ url('/') }}" class="text-sm font-medium text-gray-400 hover:text-orange-500 transition-colors">
+                Halaman Utama
+            </a>
         </div>
     </div>
 </body>
