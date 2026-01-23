@@ -61,6 +61,16 @@ class AppServiceProvider extends ServiceProvider
         
         // Ensure Core Notifications (Toasts) is mapped
         \Livewire\Livewire::component('filament.livewire.notifications', \Filament\Notifications\Livewire\Notifications::class);
+
+        // Explicitly Register User Resource Pages (Critical)
+        \Livewire\Livewire::component('app.filament.resources.users.pages.list-users', \App\Filament\Resources\Users\Pages\ListUsers::class);
+        \Livewire\Livewire::component('app.filament.resources.users.pages.create-user', \App\Filament\Resources\Users\Pages\CreateUser::class);
+        \Livewire\Livewire::component('app.filament.resources.users.pages.edit-user', \App\Filament\Resources\Users\Pages\EditUser::class);
+
+        // Explicitly Register DivisionMember Resource Pages
+        \Livewire\Livewire::component('app.filament.resources.division-members.pages.list-division-members', \App\Filament\Resources\DivisionMembers\Pages\ListDivisionMembers::class);
+        \Livewire\Livewire::component('app.filament.resources.division-members.pages.create-division-member', \App\Filament\Resources\DivisionMembers\Pages\CreateDivisionMember::class);
+        \Livewire\Livewire::component('app.filament.resources.division-members.pages.edit-division-member', \App\Filament\Resources\DivisionMembers\Pages\EditDivisionMember::class);
     }
 
     public function boot(): void
