@@ -99,7 +99,7 @@ class PengajuanIzin extends Page implements HasForms
             ->actions([
                 NotificationAction::make('view')
                     ->button()
-                    ->url(\App\Filament\Resources\Attendances\AttendanceResource::getUrl('edit', ['record' => $attendance->id])),
+                    ->url(\App\Filament\Resources\Attendances\AttendanceResource::getUrl('edit', ['record' => $attendance->id], panel: 'admin')),
             ])
             ->sendToDatabase($recipients);
 
