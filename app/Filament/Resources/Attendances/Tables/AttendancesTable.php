@@ -53,17 +53,20 @@ class AttendancesTable
                     ->getStateUsing(fn (Attendance $record): string => match (true) {
                         $record->status === 'hadir' => 'Hadir',
                         $record->is_approved => 'Approved',
-                        default => 'Waiting',
+                        in_array($record->status, ['izin', 'sakit']) => 'Pending',
+                        default => 'Unapproved',
                     })
                     ->color(fn (Attendance $record): string => match (true) {
                         $record->status === 'hadir' => 'success',
                         $record->is_approved => 'success',
+                        in_array($record->status, ['izin', 'sakit']) => 'warning',
                         default => 'danger',
                     })
                     ->icon(fn (Attendance $record): string => match (true) {
                         $record->status === 'hadir' => 'heroicon-m-minus-small',
                         $record->is_approved => 'heroicon-m-check-badge',
-                        default => 'heroicon-m-clock',
+                        in_array($record->status, ['izin', 'sakit']) => 'heroicon-m-clock',
+                        default => 'heroicon-o-x-circle',
                     })
                     ->sortable(),
             ])
