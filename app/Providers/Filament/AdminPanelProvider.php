@@ -67,6 +67,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                \App\Http\Middleware\CheckSuspended::class,
                 'role:super_admin,secretary',
             ])
             ->spa();

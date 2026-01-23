@@ -16,11 +16,8 @@ class CheckSuspended
     public function handle(Request $request, Closure $next): Response
     {
         if (auth()->check() && auth()->user()->is_suspended) {
-            // Allow access to logout and the suspension page itself (if we used a named route)
-            // But usually easiest to just check if they are visiting anything other than public portal
-            // or if the URL is not the suspension error page.
-            
-            if (!$request->is('*logout*') && !$request->is('*login*')) {
+            // Only redirect if not already on the suspended page
+            if (!$request->is('account-suspended')) {
                 return response()->view('errors.account-suspended', [], 403);
             }
         }

@@ -12,6 +12,10 @@ class LoginResponse implements Responsable
     {
         $user = auth()->user();
 
+        if ($user->is_suspended) {
+            return response()->view('errors.account-suspended', [], 403);
+        }
+
         if ($user->hasAnyRole(['super_admin', 'secretary'])) {
             return redirect()->intended('/admin');
         }
