@@ -21,15 +21,40 @@ class AppServiceProvider extends ServiceProvider
             \App\Http\Responses\LoginResponse::class
         );
         $this->app->singleton(
-            \Filament\Auth\Http\Responses\Contracts\LogoutResponse::class,
             \App\Http\Responses\LogoutResponse::class
         );
 
-        // Force register Filament Login component to fix resolution issues
-        \Livewire\Livewire::component('filament.auth.pages.login', \Filament\Auth\Pages\Login::class);
+        // Dynamic Livewire Component Failure Recovery
+        // This scans the app/Filament directory and forcefully registers all components
+        // to bypass the failing auto-discovery on the server.
+        if (file_exists(app_path('Filament'))) {
+            $filesystem = new \Illuminate\Filesystem\Filesystem();
+            $files = $filesystem->allFiles(app_path('Filament'));
+
+            foreach ($files as $file) {
+                if (!str_ends_with($file->getFilename(), '.php')) continue;
+
+                $relativePath = str_replace(
+                    ['/', '.php'],
+                    ['\\', ''],
+                    $file->getRelativePathname()
+                );
+                $class = 'App\\Filament\\' . $relativePath;
+
+                if (class_exists($class) && is_subclass_of($class, \Livewire\Component::class) && !(new \ReflectionClass($class))->isAbstract()) {
+                    $alias = \Illuminate\Support\Str::of($class)
+                        ->replace('\\', '.')
+                        ->explode('.')
+                        ->map(fn ($segment) => \Illuminate\Support\Str::kebab($segment))
+                        ->implode('.');
+                    
+                    \Livewire\Livewire::component($alias, $class);
+                }
+            }
+        }
         
-        // Force register LiveAttendance component
-        \Livewire\Livewire::component('app.filament.pages.live-attendance', \App\Filament\Pages\LiveAttendance::class);
+        // Ensure Vendor Login is also mapped
+        \Livewire\Livewire::component('filament.auth.pages.login', \Filament\Auth\Pages\Login::class);
     }
 
     public function boot(): void
