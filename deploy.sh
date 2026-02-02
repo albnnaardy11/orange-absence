@@ -128,6 +128,7 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 php artisan icons:cache 2>/dev/null || true
+php artisan filament:assets 2>/dev/null || true
 
 # 10.1. Generates API Documentation (Swagger)
 echo -e "${GREEN}📖 Generating API Documentation...${NC}"
