@@ -38,10 +38,12 @@ if [ ! -d "node_modules" ]; then
 fi
 
 # Build
+echo -e "${YELLOW}🏗️  Building Static Files...${NC}"
 npm run build
 
-# Deploy to gh-pages
-# Assumes SSH key is set up or prompt will appear
-GIT_USER="${GIT_USER:-$(git config user.name)}" USE_SSH=true npm run deploy
-
-echo -e "${GREEN}✅ Documentation updated and pushed to gh-pages!${NC}"
+echo -e "\n${GREEN}✅ Build Successful!${NC}"
+echo -e "To deploy these changes to GitHub Pages:"
+echo -e "1. ${YELLOW}git add .${NC}"
+echo -e "2. ${YELLOW}git commit -m \"docs: update documentation\"${NC}"
+echo -e "3. ${YELLOW}git push origin main${NC}"
+echo -e "\n${GREEN}GitHub Actions will handle the production build and deployment.${NC}"
