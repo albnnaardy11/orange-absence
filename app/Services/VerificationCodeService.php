@@ -43,6 +43,13 @@ class VerificationCodeService
             throw new \Exception('Hari ini adalah hari libur, sistem absensi dinonaktifkan.');
         }
 
+        // 0.1 Division Membership Check (Strict Isolation)
+        $user = \App\Models\User::find($userId);
+        if (!$user || !$user->divisions->contains($divisionId)) {
+            \Illuminate\Support\Facades\Log::warning("DIVISION_MISMATCH_SERVICE: User {$userId} tried to access division {$divisionId}");
+            throw new \Exception('Maaf, Anda tidak terdaftar di divisi ini.');
+        }
+
         // 1. Geofencing Check (10 meter strict as per request)
         if ($division && $division->latitude && $division->longitude) {
             if (!$userLat || !$userLong) {

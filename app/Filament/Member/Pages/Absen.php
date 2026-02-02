@@ -110,6 +110,12 @@ class Absen extends Page implements HasForms
                  throw new \Exception("Divisi dalam QR tidak ditemukan di sistem.");
             }
 
+            // Division Check (Strict Isolation)
+            if (!Auth::user()->divisions->contains($division->id)) {
+                 \Illuminate\Support\Facades\Log::warning("DIVISION_MISMATCH: User {$userId} tried to scan for {$division->name}");
+                 throw new \Exception("Ups! Kode QR ini untuk Divisi {$division->name}. Anda tidak terdaftar di divisi tersebut.");
+            }
+
             // Geofencing (Strictly using division settings)
             if ($division->latitude && $division->longitude) {
                 if (!$userLat || !$userLong) {
