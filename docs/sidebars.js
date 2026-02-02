@@ -13,9 +13,19 @@ const sidebars = {
     },
     {
       type: 'category',
-      label: 'Developer Guide',
+      label: 'Security & Integrity',
+      items: [
+        'database-schema',
+        'maintenance-health',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Developer & DevOps',
       items: [
         'api-integration',
+        'deployment-hosting',
+        'troubleshooting-faq',
       ],
     },
   ],
