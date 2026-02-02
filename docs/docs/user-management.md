@@ -1,14 +1,34 @@
-# User Management Guide
+# User Management
 
-## Overview
-The User Management module allows Super Admins to manage all users within the Orange Absence system.
+Managing members in Orange Absence involves roles, permissions, and division assignments.
 
-## Roles
-- **Super Admin**: Full access to all modules.
-- **Secretary**: Management access for specific divisions.
-- **Member**: Access to scan QR codes and view personal attendance.
+## Roles & Permissions
 
-## Operations
-1.  **Creating a User**: Navigate to `Users > Create User`. Enter name, email, and assign roles.
-2.  **Suspending Users**: Go to the User list, select a user, and toggle the `Is Suspended` status. Locked users cannot access the system.
-3.  **Importing via Excel**: Use the Import button on the User list to bulk-upload members. Ensure you use the provided template.
+The system uses `spatie/laravel-permission`. There are three primary tiers:
+
+| Role | Access Level | Responsibilities |
+| :--- | :--- | :--- |
+| **Super Admin** | Full | System config, Database management, Global logs. |
+| **Secretary** | Division | Managing their own division's attendance and finances. |
+| **Member** | Personal | View own attendance and cash logs. |
+
+### Pro-Tip: Adding New Secretaries
+When adding a new secretary, ensure you assign them to a **Division**. Without a division assignment, a secretary might see empty data or encounter errors in division-specific scopes.
+
+## Account Suspension
+
+If a member is suspended:
+1. They **cannot** scan QR codes.
+2. They **cannot** login to the member portal.
+3. Their attendance history remains stored but they are hidden from active attendance lists.
+
+:::info Re-activation
+Suspension is a simple boolean flag in the `users` table. Re-activating a user immediately restores all their access without data loss.
+:::
+
+## Division Logic
+
+Every user belongs to exactly one division. The division determines:
+- Which **Schedules** the user is eligible for.
+- Which **Secretary** can view their data.
+- The amount of **Kas** (Cash) they need to pay weekly.

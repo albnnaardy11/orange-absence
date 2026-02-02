@@ -4,44 +4,33 @@ sidebar_position: 1
 
 # Introduction
 
-Let's discover **Docusaurus in less than 5 minutes**.
+Technical documentation for the **Orange Absence System**. This system is built to handle mission-critical attendance tracking and financial management for divisional organizations.
+
+## Technical Philosophy
+
+This project follows a "Strict & Transparent" philosophy:
+1. **Explicit over Implicit**: We avoid magic methods where explicit code provides better IDE support and readability.
+2. **Database First**: Relationships are enforced at the database level (foreign keys) to prevent data corruption.
+3. **Type Safety**: Using PHP 8.3 features like constructor property promotion and strict typing throughout the backend.
+
+## Key Modules
+
+### 1. Attendance Engine
+Leverages QR code scanning with real-time geofencing. It handles latitude/longitude verification to ensure users are physically present at the eskuls location.
+
+### 2. Financial Automation
+The system automatically calculates "Kas" (weekly dues). It tracks who hasn't paid and provides an audit log for all cash transactions.
+
+### 3. Secretary Dashboard
+A high-performance admin panel built with FilamentPHP, allowing secretaries to manage hundreds of records with ease.
 
 ## Getting Started
 
-Get started by **creating a new site**.
+If you are a developer looking to contribute:
+1. Clone the repository.
+2. Run `./deploy.sh` to setup the environment.
+3. Use `php artisan serve` to start the local server.
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
-
-### What you'll need
-
-- [Node.js](https://nodejs.org/en/download/) version 20.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
-
-## Generate a new site
-
-Generate a new Docusaurus site using the **classic template**.
-
-The classic template will automatically be added to your project after you run the command:
-
-```bash
-npm init docusaurus@latest my-website classic
-```
-
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
-
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
-
-```bash
-cd my-website
-npm run start
-```
-
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
-
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+:::warning Production Note
+Always ensure that `APP_URL` in `.env` is correctly set to your production domain, otherwise QR icons and storage links will break.
+:::
