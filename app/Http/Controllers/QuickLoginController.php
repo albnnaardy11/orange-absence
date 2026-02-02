@@ -4,12 +4,21 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use OpenApi\Attributes as OA;
 
 class QuickLoginController extends Controller
 {
-    /**
-     * Display the portal with login options.
-     */
+    #[OA\Get(
+        path: "/",
+        operationId: "getPortal",
+        tags: ["Portal"],
+        summary: "Display the portal",
+        description: "Returns the portal view or redirects to dashboard if authenticated.",
+        responses: [
+            new OA\Response(response: 200, description: "Successful operation"),
+            new OA\Response(response: 302, description: "Redirect to dashboard")
+        ]
+    )]
     public function index()
     {
         // If already logged in, redirect to respective dashboard

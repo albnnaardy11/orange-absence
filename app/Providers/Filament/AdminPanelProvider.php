@@ -7,6 +7,7 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
+use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -69,6 +70,12 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
                 \App\Http\Middleware\CheckSuspended::class,
                 'role:super_admin,secretary',
+            ])
+            ->navigationItems([
+                NavigationItem::make('Documentation')
+                    ->url('https://albnnaardy11.github.io/orange-absence')
+                    ->icon('heroicon-o-book-open')
+                    ->openUrlInNewTab(),
             ]);
             // ->spa();
     }

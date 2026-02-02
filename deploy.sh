@@ -129,6 +129,30 @@ php artisan route:cache
 php artisan view:cache
 php artisan icons:cache 2>/dev/null || true
 
+# 10.1. Generates API Documentation (Swagger)
+echo -e "${GREEN}📖 Generating API Documentation...${NC}"
+if php artisan l5-swagger:generate; then
+    echo -e "${GREEN}✓ Swagger docs generated${NC}"
+    
+    # Sync with Docusaurus (detect folder)
+    if [ -d "docs/static/api" ]; then
+        DOCS_API_DIR="docs/static/api"
+    elif [ -d "docusaurus/static/api" ]; then
+        DOCS_API_DIR="docusaurus/static/api"
+    fi
+
+    if [ ! -z "$DOCS_API_DIR" ]; then
+        echo -e "${GREEN}🔄 Syncing swagger.json to $DOCS_API_DIR...${NC}"
+        mkdir -p "$DOCS_API_DIR"
+        cp storage/api-docs/api-docs.json "$DOCS_API_DIR/swagger.json"
+    else
+        echo -e "${YELLOW}⚠️  Docusaurus API folder not found (skipped sync)${NC}"
+    fi
+else
+    echo -e "${RED}❌ Failed to generate Swagger docs${NC}"
+    # Don't exit, just warn
+fi
+
 # 11. Symlink Self-Correction (Critical for cPanel)
 echo -e "${GREEN}🔗 Fixing storage symlink (Absolute Path Fix)...${NC}"
 rm -rf public/storage

@@ -5,34 +5,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\QuickLoginController;
 
 Route::get('/', [QuickLoginController::class, 'index'])->name('portal');
-Route::get('/secretary', function () {
-    return redirect()->to('/admin/login');
-})->name('secretary.login');
+use App\Http\Controllers\AuthRedirectController;
 
-Route::get('/login', function () {
-    return redirect()->to('/admin/login');
-})->name('login');
+Route::get('/', [QuickLoginController::class, 'index'])->name('portal');
+Route::get('/secretary', [AuthRedirectController::class, 'secretaryLogin'])->name('secretary.login');
+Route::get('/login', [AuthRedirectController::class, 'login'])->name('login');
 
-Route::post('/logout', function () {
-    Auth::logout();
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
-    return redirect('/');
-})->name('logout');
-
-// GET Logout for Suspended and general fallback to avoid 419 errors
-Route::get('/logout-suspended', function () {
-    Auth::logout();
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
-    return redirect('/');
-});
-
-Route::get('/logout', function () {
-    Auth::logout();
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
-    return redirect('/');
-});
+Route::post('/logout', [AuthRedirectController::class, 'logout'])->name('logout');
+// GET Logout for Suspended and general fallback
+Route::get('/logout-suspended', [AuthRedirectController::class, 'logout']);
+Route::get('/logout', [AuthRedirectController::class, 'logout']);
 
 

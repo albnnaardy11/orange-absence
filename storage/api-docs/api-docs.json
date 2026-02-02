@@ -1,0 +1,147 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Orange Absence API",
+        "description": "API Documentation for Orange Absence System",
+        "contact": {
+            "email": "admin@orange.test"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000/api",
+            "description": "API Server"
+        }
+    ],
+    "paths": {
+        "/secretary": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Secretary Login Redirect",
+                "operationId": "secretaryLoginRedirect",
+                "responses": {
+                    "302": {
+                        "description": "Redirect to login"
+                    }
+                }
+            }
+        },
+        "/login": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Login Redirect",
+                "operationId": "loginRedirect",
+                "responses": {
+                    "302": {
+                        "description": "Redirect to login"
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Logout",
+                "operationId": "logout",
+                "responses": {
+                    "302": {
+                        "description": "Logged out"
+                    }
+                }
+            }
+        },
+        "/": {
+            "get": {
+                "tags": [
+                    "Portal"
+                ],
+                "summary": "Display the portal",
+                "description": "Returns the portal view or redirects to dashboard if authenticated.",
+                "operationId": "getPortal",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "302": {
+                        "description": "Redirect to dashboard"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "User": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Ardy Al-Banna"
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "admin@orange.test"
+                    },
+                    "points": {
+                        "type": "integer",
+                        "example": 100
+                    },
+                    "is_suspended": {
+                        "type": "boolean",
+                        "example": false
+                    }
+                },
+                "type": "object"
+            },
+            "Attendance": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "present"
+                    },
+                    "is_approved": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "sanctum": {
+                "type": "apiKey",
+                "description": "Enter token in format (Bearer <token>)",
+                "name": "Authorization",
+                "in": "header"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Authentication",
+            "description": "Authentication"
+        },
+        {
+            "name": "Portal",
+            "description": "Portal"
+        }
+    ]
+}

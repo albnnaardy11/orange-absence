@@ -1,0 +1,70 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/**'
+      - 'docs/**'
+      - 'docusaurus/**'
+      - '.github/workflows/deploy-docs.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Install Composer Dependencies
+        run: composer install --no-dev --no-progress --prefer-dist
+
+      - name: Generate Swagger Specs
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan l5-swagger:generate
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build and Deploy Docusaurus
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -d "docs" ] && [ -f "docs/docusaurus.config.js" ]; then
+             DOCS_DIR="docs"
+          elif [ -d "docusaurus" ] && [ -f "docusaurus/docusaurus.config.js" ]; then
+             DOCS_DIR="docusaurus"
+          else
+             echo "Docusaurus directory not found."
+             exit 1
+          fi
+
+          echo "Found Docusaurus in $DOCS_DIR"
+          
+          # Sync Specs
+          mkdir -p $DOCS_DIR/static/api
+          cp storage/api-docs/api-docs.json $DOCS_DIR/static/api/swagger.json
+          
+          cd $DOCS_DIR
+          npm ci
+          npm run build
+          
+          # Deploy to gh-pages
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          echo "git remote add origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          
+          npm run deploy
