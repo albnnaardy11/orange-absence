@@ -38,11 +38,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Build and Deploy Docusaurus
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GIT_USER: github-actions[bot]
-          USE_SSH: false
+      - name: Build Docusaurus
         run: |
           if [ -d "docs" ] && [ -f "docs/docusaurus.config.js" ]; then
              DOCS_DIR="docs"
@@ -62,12 +58,10 @@ jobs:
           cd $DOCS_DIR
           npm ci
           npm run build
-          
-          # Deploy to gh-pages
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          echo "git remote add origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          
-          GIT_USER=github-actions[bot] npm run deploy
 
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/build
+          force_orphan: false
