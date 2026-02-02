@@ -69,4 +69,5 @@ jobs:
           echo "git remote add origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           
-          npm run deploy
+          GIT_USER=github-actions[bot] npm run deploy
+
