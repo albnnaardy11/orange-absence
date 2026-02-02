@@ -1,29 +1,29 @@
-# Finances & Cash Logs
+# Keuangan & Log Kas
 
-The financial module automates the collection and tracking of divisional "Kas".
+Modul keuangan mengotomatiskan penagihan dan pelacakan "Kas" divisi.
 
-## Automated Weekly Billing
+## Penagihan Mingguan Otomatis
 
-Every Monday, a background job calculates the dues for each active member.
+Setiap hari Senin, sebuah *background job* menghitung iuran untuk setiap anggota aktif.
 
-- **Calculation**: Based on the `weekly_fee` set in the `divisions` table.
-- **Arrears**: If a member hasn't paid for 3 weeks, they are flagged in the Secretary's "Red List".
+- **Perhitungan**: Berdasarkan `weekly_fee` yang diatur di tabel `divisions`.
+- **Tunggakan**: Jika seorang anggota belum membayar selama 3 minggu, mereka akan ditandai dalam "Daftar Merah" Sekretaris.
 
-## Managing Cash Logs
+## Mengelola Log Kas
 
-Every payment should be recorded through the Admin Panel. 
-1. **Source**: The member paying.
-2. **Amount**: Total paid (can be partial).
-3. **Admin Notes**: Used for tracking physical receipts or bank transfers.
+Setiap pembayaran harus dicatat melalui Panel Admin.
+1. **Sumber**: Anggota yang membayar.
+2. **Jumlah**: Total yang dibayar (bisa cicilan/parsial).
+3. **Catatan Admin**: Digunakan untuk melacak bukti fisik atau transfer bank.
 
-:::danger Financial Integrity
-Once a transaction is "Finalized", it cannot be deleted by a Secretary. Only a Super Admin with database access can reverse a finalized transaction to prevent embezzlement.
+:::danger Integritas Keuangan
+Setelah transaksi "Finalized" (Selesai), transaksi tersebut tidak dapat dihapus oleh Sekretaris. Hanya Super Admin dengan akses database yang dapat membatalkan transaksi yang sudah selesai untuk mencegah penggelapan.
 :::
 
-## Best Practices
+## Praktik Terbaik
 
-### Audit Trail
-Always use the **Points** system as a reward. The system can be configured to automatically award points to users who pay their Kas on time.
+### Jejak Audit (Audit Trail)
+Selalu gunakan sistem **Poin** sebagai *reward*. Sistem dapat dikonfigurasi untuk secara otomatis memberikan poin kepada pengguna yang membayar Kas tepat waktu.
 
-### Partial Payments
-If a member cannot pay in full, the system tracks the remaining balance. The Secretary should record exactly what was received to keep the "Total Cash in Hand" accurate.
+### Pembayaran Parsial
+Jika anggota tidak dapat membayar penuh, sistem akan melacak sisa saldo. Sekretaris harus mencatat persis berapa yang diterima untuk menjaga akurasi "Total Uang Tunai di Tangan".

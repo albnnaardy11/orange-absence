@@ -4,7 +4,7 @@ const sidebars = {
     'intro',
     {
       type: 'category',
-      label: 'Core Operations',
+      label: 'Operasional Inti',
       items: [
         'user-management',
         'attendance-scheduling',
@@ -13,7 +13,7 @@ const sidebars = {
     },
     {
       type: 'category',
-      label: 'Security & Integrity',
+      label: 'Keamanan & Integritas',
       items: [
         'database-schema',
         'maintenance-health',
@@ -21,7 +21,7 @@ const sidebars = {
     },
     {
       type: 'category',
-      label: 'Developer & DevOps',
+      label: 'Panduan Developer & DevOps',
       items: [
         'api-integration',
         'deployment-hosting',

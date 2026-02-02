@@ -11,7 +11,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Orange Absence',
-  tagline: 'Technical Documentation & API Specs',
+  tagline: 'Dokumentasi Teknis & Spesifikasi API',
   favicon: 'img/favicon.ico',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
@@ -86,7 +86,7 @@ const config = {
             type: 'docSidebar',
             sidebarId: 'tutorialSidebar',
             position: 'left',
-            label: 'Documentation',
+            label: 'Dokumentasi',
           },
           {
             href: 'https://github.com/albnnaardy11/orange-absence',
@@ -99,33 +99,33 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: 'Docs',
+            title: 'Dokumentasi',
             items: [
               {
-                label: 'Introduction',
+                label: 'Pendahuluan',
                 to: '/docs/intro',
               },
               {
-                label: 'User Management',
+                label: 'Manajemen User',
                 to: '/docs/user-management',
               },
             ],
           },
           {
-            title: 'System',
+            title: 'Sistem',
             items: [
               {
-                label: 'API Specs',
+                label: 'Spek API',
                 to: '/docs/api-integration',
               },
               {
-                label: 'Finances',
+                label: 'Keuangan',
                 to: '/docs/finances',
               },
             ],
           },
           {
-            title: 'Community',
+            title: 'Komunitas',
             items: [
               {
                 label: 'GitHub',

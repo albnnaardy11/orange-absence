@@ -1,34 +1,34 @@
-# User Management
+# Manajemen User
 
-Managing members in Orange Absence involves roles, permissions, and division assignments.
+Mengelola anggota di Orange Absence melibatkan peran (roles), izin (permissions), dan penugasan divisi.
 
 ## Roles & Permissions
 
-The system uses `spatie/laravel-permission`. There are three primary tiers:
+Sistem menggunakan `spatie/laravel-permission`. Ada tiga tingkatan utama:
 
-| Role | Access Level | Responsibilities |
+| Role | Level Akses | Tanggung Jawab |
 | :--- | :--- | :--- |
-| **Super Admin** | Full | System config, Database management, Global logs. |
-| **Secretary** | Division | Managing their own division's attendance and finances. |
-| **Member** | Personal | View own attendance and cash logs. |
+| **Super Admin** | Full | Konfigurasi sistem, Manajemen Database, Log Global. |
+| **Secretary** | Divisi | Mengelola absensi dan keuangan divisi mereka sendiri. |
+| **Member** | Pribadi | Melihat riwayat absensi dan log kas sendiri. |
 
-### Pro-Tip: Adding New Secretaries
-When adding a new secretary, ensure you assign them to a **Division**. Without a division assignment, a secretary might see empty data or encounter errors in division-specific scopes.
+### Pro-Tip: Menambah Sekretaris Baru
+Saat menambah sekretaris baru, pastikan Anda menugaskan mereka ke dalam sebuah **Divisi**. Tanpa penugasan divisi, sekretaris mungkin akan melihat data kosong atau menemui error pada scope data spesifik divisi.
 
-## Account Suspension
+## Suspensi Akun
 
-If a member is suspended:
-1. They **cannot** scan QR codes.
-2. They **cannot** login to the member portal.
-3. Their attendance history remains stored but they are hidden from active attendance lists.
+Jika seorang anggota disuspensi:
+1. Mereka **tidak bisa** memindai kode QR.
+2. Mereka **tidak bisa** login ke portal anggota.
+3. Riwayat kehadiran mereka tetap tersimpan tetapi mereka disembunyikan dari daftar absensi aktif.
 
-:::info Re-activation
-Suspension is a simple boolean flag in the `users` table. Re-activating a user immediately restores all their access without data loss.
+:::info Re-aktivasi
+Suspensi hanyalah flag boolean sederhana di tabel `users`. Mengaktifkan kembali user akan langsung memulihkan semua akses mereka tanpa kehilangan data.
 :::
 
-## Division Logic
+## Logika Divisi
 
-Every user belongs to exactly one division. The division determines:
-- Which **Schedules** the user is eligible for.
-- Which **Secretary** can view their data.
-- The amount of **Kas** (Cash) they need to pay weekly.
+Setiap user terdaftar di tepat satu divisi. Divisi menentukan:
+- **Jadwal** mana yang tersedia untuk user tersebut.
+- **Sekretaris** mana yang bisa melihat data mereka.
+- Jumlah **Kas** yang harus mereka bayar setiap minggunya.

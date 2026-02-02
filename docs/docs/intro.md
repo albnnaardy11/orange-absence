@@ -2,35 +2,35 @@
 sidebar_position: 1
 ---
 
-# Introduction
+# Pendahuluan
 
-Technical documentation for the **Orange Absence System**. This system is built to handle mission-critical attendance tracking and financial management for divisional organizations.
+Dokumentasi teknis untuk **Orange Absence System**. Sistem ini dibangun untuk menangani pelacakan kehadiran yang krusial dan manajemen keuangan untuk organisasi berbasis divisi.
 
-## Technical Philosophy
+## Filosofi Teknis
 
-This project follows a "Strict & Transparent" philosophy:
-1. **Explicit over Implicit**: We avoid magic methods where explicit code provides better IDE support and readability.
-2. **Database First**: Relationships are enforced at the database level (foreign keys) to prevent data corruption.
-3. **Type Safety**: Using PHP 8.3 features like constructor property promotion and strict typing throughout the backend.
+Proyek ini mengikuti filosofi "Strict & Transparent" (Ketat & Transparan):
+1. **Eksplisit di atas Implisit**: Kami menghindari "magic methods" di mana kode yang eksplisit memberikan dukungan IDE dan keterbacaan yang lebih baik.
+2. **Database First**: Relasi dipaksakan pada level database (foreign keys) untuk mencegah korupsi data.
+3. **Keamanan Tipe (Type Safety)**: Menggunakan fitur PHP 8.3 seperti *constructor property promotion* dan *strict typing* di seluruh bagian backend.
 
-## Key Modules
+## Modul Utama
 
-### 1. Attendance Engine
-Leverages QR code scanning with real-time geofencing. It handles latitude/longitude verification to ensure users are physically present at the eskuls location.
+### 1. Mesin Absensi
+Memanfaatkan pemindaian kode QR dengan geofencing real-time. Menangani verifikasi garis lintang/bujur untuk memastikan pengguna secara fisik hadir di lokasi eskul.
 
-### 2. Financial Automation
-The system automatically calculates "Kas" (weekly dues). It tracks who hasn't paid and provides an audit log for all cash transactions.
+### 2. Otomatisasi Keuangan
+Sistem secara otomatis menghitung "Kas" (iuran mingguan). Melacak siapa yang belum membayar dan menyediakan log audit untuk semua transaksi tunai.
 
-### 3. Secretary Dashboard
-A high-performance admin panel built with FilamentPHP, allowing secretaries to manage hundreds of records with ease.
+### 3. Dashboard Sekretaris
+Panel admin berperforma tinggi yang dibangun dengan FilamentPHP, memungkinkan sekretaris untuk mengelola ratusan catatan dengan mudah.
 
-## Getting Started
+## Memulai
 
-If you are a developer looking to contribute:
-1. Clone the repository.
-2. Run `./deploy.sh` to setup the environment.
-3. Use `php artisan serve` to start the local server.
+Jika Anda adalah pengembang yang ingin berkontribusi:
+1. Clone repository.
+2. Jalankan `./deploy.sh` untuk menyiapkan lingkungan.
+3. Gunakan `php artisan serve` untuk menjalankan server lokal.
 
-:::warning Production Note
-Always ensure that `APP_URL` in `.env` is correctly set to your production domain, otherwise QR icons and storage links will break.
+:::warning Catatan Produksi
+Selalu pastikan bahwa `APP_URL` di `.env` sudah diatur dengan benar ke domain produksi Anda, jika tidak, ikon QR dan link penyimpanan akan rusak.
 :::

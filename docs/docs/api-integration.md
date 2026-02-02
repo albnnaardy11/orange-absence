@@ -1,39 +1,39 @@
-# API Integration
+# Integrasi API
 
-Orange Absence provides a robust API for external integrations and the mobile portal.
+Orange Absence menyediakan API yang kuat untuk integrasi eksternal dan portal mobile.
 
-## Authentication Guide
+## Panduan Otentikasi
 
-API requests require session-based or token-based authentication depending on the client.
+Permintaan API memerlukan otentikasi berbasis session atau token tergantung pada client.
 
-### For Mobile Portal
-The mobile portal uses Laravel Sanctum's stateful cookie authentication.
-1. `GET /sanctum/csrf-cookie` (initialize session)
-2. `POST /login` (submit credentials)
+### Untuk Portal Mobile
+Portal mobile menggunakan otentikasi cookie stateful dari Laravel Sanctum.
+1. `GET /sanctum/csrf-cookie` (untuk inisialisasi session)
+2. `POST /login` (mengirim kredensial)
 
-## Core Endpoints
+## Endpoint Utama
 
-| Method | Endpoint | Description |
+| Method | Endpoint | Deskripsi |
 | :--- | :--- | :--- |
-| `GET` | `/portal` | Fetch user dashboard and active schedules. |
-| `POST` | `/attendance/scan` | Submit QR payload and GPS coordinates. |
-| `GET` | `/member/payments` | Fetch personal financial history. |
+| `GET` | `/portal` | Mengambil dashboard user dan jadwal aktif. |
+| `POST` | `/attendance/scan` | Mengirim payload QR dan koordinat GPS. |
+| `GET` | `/member/payments` | Mengambil riwayat keuangan pribadi. |
 
-## Documentation as Code
+## Dokumentasi sebagai Kode
 
-We use `L5-Swagger` (OpenAPI 3.0). The documentation is generated directly from **PHP Attributes** in the Controllers.
+Kami menggunakan `L5-Swagger` (OpenAPI 3.0). Dokumentasi di-generate langsung dari **PHP Attributes** di dalam Controller.
 
-### View Interactive Swagger UI
-You can access the interactive documentation on your local development server:
+### Lihat Swagger UI Interaktif
+Kamu bisa mengakses dokumentasi interaktif di server development lokal:
 - URL: `http://localhost:8000/api/documentation`
 
-:::tip Advice: Integration Security
-Never expose your `APP_KEY` or `JWT_SECRET`. External apps should use a dedicated Service Account with limited permissions.
+:::tip Advice: Keamanan Integrasi
+Jangan pernah mengekspos `APP_KEY` atau `JWT_SECRET` kamu. Aplikasi eksternal harus menggunakan Service Account khusus dengan izin terbatas.
 :::
 
-## Error Handling
-The API returns standard HTTP status codes:
-- `200`: Success
-- `401`: Unauthorized (Login required)
-- `403`: Forbidden (e.g., Geofence failed)
-- `422`: Validation Error (e.g., Missing GPS data)
+## Penanganan Error
+API mengembalikan kode status HTTP standar:
+- `200`: Success (Berhasil)
+- `401`: Unauthorized (Butuh Login)
+- `403`: Forbidden (Terlarang, misal: Geofence gagal)
+- `422`: Validation Error (Gagal Validasi, misal: Data GPS tidak ada)

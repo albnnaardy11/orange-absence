@@ -1,30 +1,30 @@
-# Attendance & Scheduling
+# Absensi & Penjadwalan
 
-The core of Orange Absence is the smart attendance system. It combines GPS location and rotating QR codes to prevent cheating.
+Inti dari Orange Absence adalah sistem absensi pintar. Sistem ini menggabungkan lokasi GPS dan kode QR yang berputar untuk mencegah kecurangan.
 
-## How Geofencing Works
+## Cara Kerja Geofencing
 
-The system calculates the distance between the **User's Phone** and the **Schedule's Latitude/Longitude** using the Haversine formula.
+Sistem menghitung jarak antara **Ponsel Pengguna** dan **Garis Lintang/Bujur Jadwal** menggunakan rumus Haversine.
 
-- **Radius**: Default is 50 meters (configurable via env).
-- **Grace Period**: Users can scan up to 15 minutes before and 30 minutes after the schedule starts.
+- **Radius**: Default adalah 50 meter (bisa dikonfigurasi via env).
+- **Periode Toleransi**: Pengguna dapat memindai hingga 15 menit sebelum dan 30 menit setelah jadwal dimulai.
 
-:::tip Advice: GPS Accuracy
-Explain to users that they should stay outdoors or near windows when scanning. Indoor GPS jitter can sometimes put them 100m away, causing a "Outside Area" error.
+:::tip Advice: Akurasi GPS
+Jelaskan kepada pengguna bahwa mereka sebaiknya berada di luar ruangan atau di dekat jendela saat memindai. Gangguan GPS di dalam ruangan terkadang dapat menempatkan mereka sejauh 100m, yang menyebabkan error "Luar Area".
 :::
 
-## Scheduling Logic
+## Logika Penjadwalan
 
-Schedules are recurring. A schedule is defined by:
-- **Location**: Lat/Long coordinates.
-- **Time**: Start and end time.
-- **Division**: Which group this schedule is for.
+Jadwal bersifat berulang. Sebuah jadwal didefinisikan oleh:
+- **Lokasi**: Koordinat Lintang/Bujur (Lat/Long).
+- **Waktu**: Waktu mulai dan berakhir.
+- **Divisi**: Kelompok mana yang memiliki jadwal ini.
 
-### The "Auto-Absent" Rule
-If a user does not scan during the schedule time, the system will not automatically mark them as "Absent". The Secretary must review the "Missing" list and confirm the status at the end of the day.
+### Aturan "Auto-Absent"
+Jika pengguna tidak memindai selama waktu jadwal, sistem tidak akan secara otomatis menandai mereka sebagai "Alpa". Sekretaris harus meninjau daftar "Missing" dan mengonfirmasi statusnya di akhir hari.
 
-## QR Code Security
+## Keamanan Kode QR
 
-QR codes are **NOT static**. Each scan session generates a unique signature. 
-1. If a user tries to screenshot and send the QR to a friend, the friend will likely fail the **Geofence Check**.
-2. If the secretary regenerates the code, the old code is invalidated immediately.
+Kode QR **TIDAK statis**. Setiap sesi pemindaian menghasilkan tanda tangan unik.
+1. Jika pengguna mencoba mengambil tangkapan layar (screenshot) dan mengirim QR ke teman, teman tersebut kemungkinan besar akan gagal dalam **Pemeriksaan Geofence**.
+2. Jika sekretaris membuat ulang kode, kode lama akan langsung tidak berlaku.
