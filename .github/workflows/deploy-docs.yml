@@ -41,6 +41,8 @@ jobs:
       - name: Build and Deploy Docusaurus
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_USER: github-actions[bot]
+          USE_SSH: false
         run: |
           if [ -d "docs" ] && [ -f "docs/docusaurus.config.js" ]; then
              DOCS_DIR="docs"
