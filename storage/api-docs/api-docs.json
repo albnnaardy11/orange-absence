@@ -1,10 +1,10 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "Orange Absence API",
-        "description": "API Documentation for Orange Absence System",
+        "title": "Orens Absence API",
+        "description": "API Documentation for Orens Absence System",
         "contact": {
-            "email": "admin@orange.test"
+            "email": "admin@orens.test"
         },
         "version": "1.0.0"
     },
@@ -90,7 +90,7 @@
                     },
                     "email": {
                         "type": "string",
-                        "example": "admin@orange.test"
+                        "example": "admin@orens.test"
                     },
                     "points": {
                         "type": "integer",
