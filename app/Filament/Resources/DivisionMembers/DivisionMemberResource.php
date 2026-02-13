@@ -4,6 +4,7 @@ namespace App\Filament\Resources\DivisionMembers;
 
 use App\Filament\Resources\DivisionMembers\Pages;
 use App\Models\User;
+use App\Models\Division;
 use Filament\Schemas\Schema;
 use Filament\Forms;
 use Filament\Resources\Resource;
@@ -80,6 +81,22 @@ class DivisionMemberResource extends Resource
             ])
             ->bulkActions([
                 \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\BulkAction::make('assignDivision')
+                        ->label('Masukan ke Divisi')
+                        ->icon('heroicon-m-building-office')
+                        ->form([
+                            Forms\Components\Select::make('division_id')
+                                ->label('Divisi')
+                                ->options(Division::pluck('name', 'id'))
+                                ->required(),
+                        ])
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data) {
+                            $records->each(function (User $user) use ($data) {
+                                $user->divisions()->syncWithoutDetaching([$data['division_id']]);
+                            });
+                        })
+                        ->deselectRecordsAfterCompletion()
+                        ->successNotificationTitle('Berhasil memasukan member ke divisi'),
                     \Filament\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
