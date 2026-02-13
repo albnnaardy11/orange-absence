@@ -8,6 +8,9 @@ use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use Filament\Notifications\Notification;
 
 class UsersTable
 {
@@ -84,10 +87,48 @@ class UsersTable
                             ->success()
                             ->send();
                     }),
+                \Filament\Actions\Action::make('reset_password')
+                    ->label('Reset Pwd')
+                    ->icon('heroicon-o-key')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Reset Password')
+                    ->modalDescription('Reset password user ini menjadi ORENSSOLUTION2026?')
+                    ->action(function ($record) {
+                        $record->update([
+                            'password' => Hash::make('ORENSSOLUTION2026'),
+                        ]);
+                        
+                        Notification::make()
+                            ->title('Password Berhasil Direset')
+                            ->body("Password untuk {$record->name} telah direset ke default.")
+                            ->success()
+                            ->send();
+                    }),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    \Filament\Actions\BulkAction::make('reset_passwords_bulk')
+                        ->label('Reset Password (Terpilih)')
+                        ->icon('heroicon-o-key')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Reset Password Massal')
+                        ->modalDescription('Reset password semua user yang dipilih menjadi ORENSSOLUTION2026?')
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
+                            $records->each(function (User $user) {
+                                $user->update([
+                                    'password' => Hash::make('ORENSSOLUTION2026'),
+                                ]);
+                            });
+
+                            Notification::make()
+                                ->title($records->count() . ' Password Berhasil Direset')
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
                     DeleteBulkAction::make(),
                 ]),
             ]);
