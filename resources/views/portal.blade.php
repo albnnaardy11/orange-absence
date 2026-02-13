@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orange Absence | Gateway Portal</title>
+    <title>Orens Absence | Gateway Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -119,10 +119,10 @@
         <!-- Header -->
         <header class="text-center mb-20">
             <h1 class="text-7xl font-extrabold mb-6 tracking-tight">
-                <span class="orange-gradient-text">ABSEN ORANGE</span>
+                <span class="orange-gradient-text">ABSEN ORENS</span>
             </h1>
             <p class="text-gray-400 text-xl font-light max-w-2xl mx-auto">
-                Portal Akses Sistem Absensi & Kas Orange. 
+                Portal Akses Sistem Absensi & Kas Orens. 
                 Pilih peran Anda untuk masuk ke sistem.
             </p>
         </header>
@@ -180,7 +180,7 @@
                 <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                 <span>Status: Online</span>
             </div>
-            <p class="text-gray-600 text-sm mt-6 font-light opacity-50">&copy; {{ date('Y') }} Ardy Albanna | Orange Absence. All rights reserved</p>
+            <p class="text-gray-600 text-sm mt-6 font-light opacity-50">&copy; {{ date('Y') }} Ardy Albanna | Orens Absence. All rights reserved</p>
         </footer>
     </div>
 </body>

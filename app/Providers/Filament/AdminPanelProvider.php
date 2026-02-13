@@ -31,7 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->brandName('ABSEN ORANGE')
+            ->brandName('ABSEN ORENS')
             ->colors([
                 'primary' => Color::Amber,
             ])

@@ -6,9 +6,9 @@ use OpenApi\Attributes as OA;
 
 #[OA\Info(
     version: "1.0.0",
-    title: "Orange Absence API",
-    description: "API Documentation for Orange Absence System",
-    contact: new OA\Contact(email: "admin@orange.test")
+    title: "Orens Absence API",
+    description: "API Documentation for Orens Absence System",
+    contact: new OA\Contact(email: "admin@orens.test")
 )]
 #[OA\Server(
     url: "http://localhost:8000/api",
@@ -19,7 +19,7 @@ use OpenApi\Attributes as OA;
     properties: [
         new OA\Property(property: "id", type: "integer", example: 1),
         new OA\Property(property: "name", type: "string", example: "Ardy Al-Banna"),
-        new OA\Property(property: "email", type: "string", example: "admin@orange.test"),
+        new OA\Property(property: "email", type: "string", example: "admin@orens.test"),
         new OA\Property(property: "points", type: "integer", example: 100),
         new OA\Property(property: "is_suspended", type: "boolean", example: false),
     ]

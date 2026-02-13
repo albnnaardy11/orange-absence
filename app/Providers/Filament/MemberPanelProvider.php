@@ -32,7 +32,7 @@ class MemberPanelProvider extends PanelProvider
             ->login()
             ->profile(\App\Filament\Member\Pages\Auth\EditProfile::class)
 
-            ->brandName('ABSEN ORANGE')
+            ->brandName('ABSEN ORENS')
             ->navigationGroups([
                 NavigationGroup::make()
                      ->label('Absensi')

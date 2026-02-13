@@ -17,7 +17,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>ORANGE ABSENCE & CASH</h1>
+        <h1>ORENS ABSENCE & CASH</h1>
         <p>Laporan Rekapitulasi Bulanan - {{ $monthName }} {{ $year }}</p>
     </div>
 
@@ -65,7 +65,7 @@
 
     <div class="footer">
         <p>Dicetak pada: {{ now()->format('d/m/Y H:i') }}</p>
-        <p>Sistem Absensi Orange - Sekretaris Panel</p>
+        <p>Sistem Absensi Orens - Sekretaris Panel</p>
     </div>
 </body>
 </html>
